@@ -46,6 +46,6 @@ public class Photons {
 			e.printStackTrace();
 		}
 
-		System.out.println("Done");
+		MyLogger.displayActionMessage("Done");
 	}
 }

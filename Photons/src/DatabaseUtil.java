@@ -60,12 +60,12 @@ public class DatabaseUtil {
 			  
 			  if (version.equals("1.0")) {
 				  // OK
-				  System.out.println("Database already exists with expected version: [" + version + "].");
+				  MyLogger.displayActionMessage("Database already exists with expected version: [" + version + "].");
 			  } else {
 				  throw new Exception("Unsupported database version: [" + version + "].");
 			  }
 		  } catch ( Exception e ) {
-			  System.out.println(e.getClass().getName() + ": " + e.getMessage() + ". Maybe the database did not exist.");
+			  MyLogger.displayActionMessage(e.getClass().getName() + ": " + e.getMessage() + ". Maybe the database did not exist.");
 
 			  Statement updateStatement = connection.createStatement();
 			  updateStatement.executeUpdate(configTableCreationCommand);
@@ -74,7 +74,7 @@ public class DatabaseUtil {
 		      
 			  updateStatement.close();
 
-			  System.out.println("Created database successfully");
+			  MyLogger.displayActionMessage("Created database successfully");
 		  }
 	      
 	      connection.close();

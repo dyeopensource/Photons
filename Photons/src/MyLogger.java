@@ -14,9 +14,13 @@ public class MyLogger {
 	private static String actionLogFile;
 	//private static String logFile;
 	
-	public static void SendActionMessage(String message) {
-		System.out.println(message);
+	public static void displayAndLogActionMessage(String message) {
+		displayActionMessage(message);
 		logAction(message);
+	}
+	
+	public static void displayActionMessage(String message) {
+		System.out.println(message);
 	}
 	
 	private static void logAction(String action) {

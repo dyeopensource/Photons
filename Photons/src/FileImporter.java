@@ -29,7 +29,7 @@ public class FileImporter {
 	
 	public void Import() throws IOException {
 
-		MyLogger.SendActionMessage("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
+		MyLogger.displayAndLogActionMessage("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
 		//System.out.println("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
 
 		// Next example with walkFileTree originates from http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
@@ -51,7 +51,7 @@ public class FileImporter {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 				{
-					System.out.println("Importing file [" + file.toString() + "]...");
+					MyLogger.displayActionMessage("Importing file [" + file.toString() + "]...");
 					
 					if (file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
 						FileToImportInfo fileToImportInfo = null;
@@ -67,11 +67,11 @@ public class FileImporter {
 							// Offer comparison afterwords?
 							
 							if (Files.exists(targetPath)) {
-								System.out.println("Target file already exists [" + targetPath.toString() + "]. Skipping copy.");
+								MyLogger.displayActionMessage("Target file already exists [" + targetPath.toString() + "]. Skipping copy.");
 							} else {
-								System.out.println("Copying file from [" + file.toString() + "] to [" + targetPath.toString() + "]");
+								MyLogger.displayActionMessage("Copying file from [" + file.toString() + "] to [" + targetPath.toString() + "]");
 								if (Files.exists(targetFolder)) {
-									System.out.println("Target folder already exists [" + targetFolder.toString() + "].");
+									MyLogger.displayActionMessage("Target folder already exists [" + targetFolder.toString() + "].");
 								} else {
 									Files.createDirectories(targetFolder);
 								}
@@ -81,10 +81,10 @@ public class FileImporter {
 								
 								// TODO: add verification step: file hash, database query...
 								
-								MyLogger.SendActionMessage("File imported from: [" + file + "] to [" + targetPath + "].");
+								MyLogger.displayAndLogActionMessage("File imported from: [" + file + "] to [" + targetPath + "].");
 							}
 						} catch (Exception e) {
-							MyLogger.SendActionMessage("ERROR: Failed to import file [" + file.toString() + "].");
+							MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [" + file.toString() + "].");
 							e.printStackTrace();
 						}
 						
