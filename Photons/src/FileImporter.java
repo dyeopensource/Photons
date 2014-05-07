@@ -29,7 +29,8 @@ public class FileImporter {
 	
 	public void Import() throws IOException {
 
-		System.out.println("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
+		MyLogger.SendActionMessage("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
+		//System.out.println("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
 
 		// Next example with walkFileTree originates from http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
 		Files.walkFileTree(this.pathToImportFrom, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
@@ -61,7 +62,10 @@ public class FileImporter {
 							Path targetFolder = Paths.get(pathToImportTo.toString(), fileImportedInfo.getSubfolder());
 							Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
-							// TODO: check existence in database
+							// TODO: check existence in database (the only way to do it is by hash)
+							// Question: what to do if duplicate found? Log and skip?
+							// Offer comparison afterwords?
+							
 							if (Files.exists(targetPath)) {
 								System.out.println("Target file already exists [" + targetPath.toString() + "]. Skipping copy.");
 							} else {
@@ -74,9 +78,13 @@ public class FileImporter {
 								
 								Files.copy(file, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
 								DatabaseUtil.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
+								
+								// TODO: add verification step: file hash, database query...
+								
+								MyLogger.SendActionMessage("File imported from: [" + file + "] to [" + targetPath + "].");
 							}
 						} catch (Exception e) {
-							System.out.println("ERROR: Failed to import file [" + file.toString() + "].");
+							MyLogger.SendActionMessage("ERROR: Failed to import file [" + file.toString() + "].");
 							e.printStackTrace();
 						}
 						

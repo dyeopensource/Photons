@@ -18,7 +18,8 @@ public class DatabaseUtil {
 			"(id							INTEGER		PRIMARY KEY, " +
 			"key							TEXT		NOT NULL, " +
 			"value							TEXT		NOT NULL, " +
-			"recordLastModificationTime		INTEGER		NOT NULL)";
+			"recordLastModificationTime		INTEGER		NOT NULL, " +
+			"deleted						INTEGER		DEFAULT 0)";
 	
 	private static final String versionInfoInsertCommand1 = "INSERT INTO config (key, value, recordLastModificationTime) " +
 			"VALUES ('version', '" + versionString + "', ";
@@ -38,7 +39,8 @@ public class DatabaseUtil {
 			"importEnabled					INTEGER	NOT NULL, " +
 			"type							TEXT	NOT NULL, " +
 			"description					TEXT	NOT NULL, " +
-			"recordLastModificationTime		INTEGER	NOT NULL)";
+			"recordLastModificationTime		INTEGER	NOT NULL, " +
+			"deleted						INTEGER	DEFAULT 0)";
 	
 	public static void openOrCreateDatabase(String folderPath) {
 	    try {
