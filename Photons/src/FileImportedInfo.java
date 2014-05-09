@@ -32,7 +32,7 @@ public class FileImportedInfo {
 		this.originalHash = originalFileInfo.getHash();
 		this.originalLastModificationTime = originalFileInfo.getLastModificationTime();
 		
-		this.subFolder = FileUtil.dateFormatter.format(this.originalLastModificationTime);
+		this.subFolder = FileUtil.subfolderDateFormatter.format(this.originalLastModificationTime);
 		this.fileName = originalFileInfo.getFileName();
 		
 		this.importEnabled = true;

@@ -29,7 +29,7 @@ public class FileImporter {
 	
 	public void Import() throws IOException {
 
-		MyLogger.displayAndLogActionMessage("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
+		MyLogger.displayAndLogActionMessage(String.format("Importing files from [%s] to [%s]", this.pathToImportFrom, this.pathToImportTo));
 		//System.out.println("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
 
 		// Next example with walkFileTree originates from http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
@@ -51,7 +51,7 @@ public class FileImporter {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 				{
-					MyLogger.displayActionMessage("Importing file [" + file.toString() + "]...");
+					MyLogger.displayActionMessage(String.format("Importing file [%s]...", file));
 					
 					if (file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
 						FileToImportInfo fileToImportInfo = null;
@@ -62,34 +62,47 @@ public class FileImporter {
 							Path targetFolder = Paths.get(pathToImportTo.toString(), fileImportedInfo.getSubfolder());
 							Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
-							// TODO: check existence in database (the only way to do it is by hash)
+							// TODO: check existence in database (the only way to do it is by hash and length)
 							// Question: what to do if duplicate found? Log and skip?
 							// Offer comparison afterwords?
 							
 							if (Files.exists(targetPath)) {
-								MyLogger.displayActionMessage("Target file already exists [" + targetPath.toString() + "]. Skipping copy.");
+								MyLogger.displayActionMessage(String.format("Target file already exists [%s]. Skipping copy.", targetPath));
 							} else {
-								MyLogger.displayActionMessage("Copying file from [" + file.toString() + "] to [" + targetPath.toString() + "]");
+								MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
 								if (Files.exists(targetFolder)) {
-									MyLogger.displayActionMessage("Target folder already exists [" + targetFolder.toString() + "].");
+									MyLogger.displayActionMessage(String.format("Target folder already exists [%s].", targetFolder));
 								} else {
 									Files.createDirectories(targetFolder);
 								}
 								
 								Files.copy(file, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
+								
+								// Verification of file copy:
+								if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
+									MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath));
+									return FileVisitResult.CONTINUE;
+								}
+								
+								if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
+									MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath));
+									return FileVisitResult.CONTINUE;
+								}
+								
 								DatabaseUtil.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
 								
-								// TODO: add verification step: file hash, database query...
+								// Verification of database insertion:
+								// TODO: add verification step
 								
-								MyLogger.displayAndLogActionMessage("File imported from: [" + file + "] to [" + targetPath + "].");
+								MyLogger.displayAndLogActionMessage(String.format("File imported from: [%s] to [%s].", file, targetPath));
 							}
 						} catch (Exception e) {
-							MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [" + file.toString() + "].");
+							MyLogger.displayAndLogActionMessage(String.format("ERROR: Failed to import file [%s].", file));
 							e.printStackTrace();
 						}
 						
 					} else {
-						System.out.println("Ignoring file because of file type mismatch [" + file.toString() + "].");
+						System.out.println(String.format("Ignoring file because of file type mismatch [%s].", file));
 					}
 
 					return FileVisitResult.CONTINUE;

@@ -8,7 +8,7 @@ import java.util.Date;
 public class MyLogger {
 
 	//private static String logFileNameWithPath;
-	private static SimpleDateFormat dateTimeLogFormatter = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss.SSS - ");  
+	private static SimpleDateFormat dateTimeLogFormatter = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss.SSS");  
 	//private static final Logger fileLogger=Logger.getLogger("Photons");
 	
 	private static String actionLogFile;
@@ -28,7 +28,7 @@ public class MyLogger {
         try {
             File logFile = new File(actionLogFile);
             writer = new BufferedWriter(new FileWriter(logFile, true));
-            writer.write(dateTimeLogFormatter.format(new Date()) + action + "\n");
+            writer.write(String.format("%s - %s\n", dateTimeLogFormatter.format(new Date()), action));
         } catch (Exception e) {
             e.printStackTrace();
         } finally {

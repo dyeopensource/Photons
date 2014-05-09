@@ -5,6 +5,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 //import java.sql.SQLException;
 import java.sql.Statement;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
@@ -21,9 +22,8 @@ public class DatabaseUtil {
 			"recordLastModificationTime		INTEGER		NOT NULL, " +
 			"deleted						INTEGER		DEFAULT 0)";
 	
-	private static final String versionInfoInsertCommand1 = "INSERT INTO config (key, value, recordLastModificationTime) " +
-			"VALUES ('version', '" + versionString + "', ";
-	private static final String versionInfoInsertCommand2 = ")";
+	private static final String versionInfoInsertCommand = "INSERT INTO config (key, value, recordLastModificationTime) " +
+			"VALUES ('version', '" + versionString + "', %d)";
 	
 	private static final String versionInfoQueryCommand = "SELECT value FROM config WHERE key='version';";
 	
@@ -42,10 +42,17 @@ public class DatabaseUtil {
 			"recordLastModificationTime		INTEGER	NOT NULL, " +
 			"deleted						INTEGER	DEFAULT 0)";
 	
+	private static final String fileInfoInsertCommand = "INSERT INTO fileinfo " +
+			"(originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
+			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
+			"VALUES ('%s', '%s', %d, '%s', %d, '%s', '%s', '%s', '%s', '%s', %d)";
+	
+	//private static 
+	
 	public static void openOrCreateDatabase(String folderPath) {
 	    try {
 	      Class.forName("org.sqlite.JDBC");
-	      String connectionString = "jdbc:sqlite:" + Paths.get(folderPath, databaseFileName).toString();
+	      String connectionString = String.format("jdbc:sqlite:%s", Paths.get(folderPath, databaseFileName));
 	      Connection connection = DriverManager.getConnection(connectionString);
 	      
 		  String  version = "";
@@ -60,16 +67,16 @@ public class DatabaseUtil {
 			  
 			  if (version.equals("1.0")) {
 				  // OK
-				  MyLogger.displayActionMessage("Database already exists with expected version: [" + version + "].");
+				  MyLogger.displayActionMessage(String.format("Database already exists with expected version: [%s].", version));
 			  } else {
-				  throw new Exception("Unsupported database version: [" + version + "].");
+				  throw new Exception(String.format("Unsupported database version: [%s].", version));
 			  }
 		  } catch ( Exception e ) {
-			  MyLogger.displayActionMessage(e.getClass().getName() + ": " + e.getMessage() + ". Maybe the database did not exist.");
+			  MyLogger.displayActionMessage(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
 
 			  Statement updateStatement = connection.createStatement();
 			  updateStatement.executeUpdate(configTableCreationCommand);
-			  updateStatement.executeUpdate(versionInfoInsertCommand1 + new Date().getTime() + versionInfoInsertCommand2);
+			  updateStatement.executeUpdate(String.format(versionInfoInsertCommand, new Date().getTime()));
 			  updateStatement.executeUpdate(fileTableCreationCommand);
 		      
 			  updateStatement.close();
@@ -80,7 +87,7 @@ public class DatabaseUtil {
 	      connection.close();
 	      
 	    } catch ( Exception e ) {
-	      System.err.println( e.getClass().getName() + ": " + e.getMessage() );
+	      System.err.println(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
 	      System.exit(0);
 	    }
 	}
@@ -93,27 +100,23 @@ public class DatabaseUtil {
 			System.exit(0);
 		}
 	    
-		String connectionString = "jdbc:sqlite:" + Paths.get(importFolderPath, databaseFileName).toString();
+		String connectionString = String.format("jdbc:sqlite:%s", Paths.get(importFolderPath, databaseFileName));
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(connectionString);
 			
-			String insertCommand = "INSERT INTO fileinfo " +
-					"(originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
-					"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
-					"VALUES (" +
-					"'" +	fileInfo.getOriginalPath() + "', " +
-					"'" +	fileInfo.getOriginalFileName() + "', " +
-							fileInfo.getOriginalLength() + ", " +
-					"'" +	fileInfo.getOriginalHash() + "', " +
-							fileInfo.getOriginalLastModificationTime().getTime() + ", " +
-					"'" +	fileInfo.getSubfolder() + "', " +
-					"'" +	fileInfo.getFileName() + "', " +
-							(fileInfo.getImportEnabled() ? "1" : "0") + ", " +
-					"'" +	fileInfo.getType() + "', " +
-					"'" +	fileInfo.getDescription() + "', " +
-							new Date().getTime() +
-					")";
+			String insertCommand = String.format(fileInfoInsertCommand,
+					fileInfo.getOriginalPath(),
+					fileInfo.getOriginalFileName(),
+					fileInfo.getOriginalLength(),
+					fileInfo.getOriginalHash(),
+					fileInfo.getOriginalLastModificationTime().getTime(),
+					fileInfo.getSubfolder(),
+					fileInfo.getFileName(),
+					getStringFromBoolValue(fileInfo.getImportEnabled()),
+					fileInfo.getType(),
+					fileInfo.getDescription(),
+					new Date().getTime());
 			
 			  Statement insertStatement = connection.createStatement();
 			  insertStatement.executeUpdate(insertCommand);
@@ -124,6 +127,10 @@ public class DatabaseUtil {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+	}
+	
+	private static String getStringFromBoolValue(Boolean value) {
+		return value ? "1" : "0";
 	}
 	
 //	private static void runSqlCommand(Connection connection, String command) throws SQLException {

@@ -19,27 +19,22 @@ public class FileToImportInfo {
 	public FileToImportInfo(Path path) throws Exception {
 		this.path = path.getParent().toString();
 		this.fileName = path.getFileName().toString();
-		
 		this.fileNameWithPath = path.toString();
-		
-		File thisFile = new File(this.fileNameWithPath);
-		this.length = thisFile.length();
-		
-		this.lastModificationTime = new Date(thisFile.lastModified());
-		this.hash = FileUtil.getChecksum(this.fileNameWithPath, "SHA-256");
+		setFileData();
 	}
 	
 	public FileToImportInfo(String path, String fileName) throws Exception {
 		this.path = path;
 		this.fileName = fileName;
-		
 		this.fileNameWithPath = Paths.get(this.path, this.fileName).toString();
-		
+		setFileData();
+	}
+	
+	private void setFileData() throws Exception {
 		File thisFile = new File(this.fileNameWithPath);
 		this.length = thisFile.length();
-		
 		this.lastModificationTime = new Date(thisFile.lastModified());
-		this.hash = FileUtil.getChecksum(this.fileNameWithPath, "MD5");
+		this.hash = FileUtil.getFileContentHash(this.fileNameWithPath);
 	}
 
 	public String getPath() {
