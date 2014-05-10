@@ -45,7 +45,10 @@ public class DatabaseUtil {
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
 			"VALUES ('%s', '%s', %d, '%s', %d, '%s', '%s', '%s', '%s', '%s', %d)";
 	
-	//private static 
+	private static final String selectFileInfoCommand = "SELECT " +
+			"id, originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
+			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
+			"FROM fileinfo WHERE originalHash='%s' AND originalLength=%d";
 	
 	public static void openOrCreateDatabase(String folderPath) {
 	    try {
@@ -124,16 +127,59 @@ public class DatabaseUtil {
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+			System.exit(0);
 		}
 	}
 	
-	private static String getStringFromBoolValue(Boolean value) {
+	public static FileImportedInfo getFileImportedInfo(
+			String importFolderPath,
+			String originalFileContentHash,
+			long originalLength) {
+	    try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+			System.exit(0);
+		}
+	    
+		String connectionString = String.format("jdbc:sqlite:%s", Paths.get(importFolderPath, databaseFileName));
+		Connection connection;
+		FileImportedInfo fileImportedInfo = null;
+		try {
+			connection = DriverManager.getConnection(connectionString);
+			
+			String queryCommand = String.format(selectFileInfoCommand,
+					originalFileContentHash,
+					originalLength);
+			
+			  Statement queryStatement = connection.createStatement();
+			  ResultSet resultSet = queryStatement.executeQuery(queryCommand);
+			  boolean fileImportedInfoWasAlreadyRetrieved = false;
+		      while ( resultSet.next() ) {
+		    	 if (fileImportedInfoWasAlreadyRetrieved) {
+		    		 // TODO: duplicate element found (same hash and length), what to do now????
+		    	 }
+		    	 fileImportedInfo = FileImportedInfo.getFileImportedInfoFromDatabase(resultSet);
+		    	 fileImportedInfoWasAlreadyRetrieved = true;
+		      }
+		      resultSet.close();
+			  queryStatement.close();
+			
+			connection.close();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			System.exit(0);
+		}
+		
+		return fileImportedInfo;
+	}
+	
+	public static String getStringFromBoolValue(Boolean value) {
 		return value ? "1" : "0";
 	}
 	
-//	private static void runSqlCommand(Connection connection, String command) throws SQLException {
-//		  Statement stmt = connection.createStatement();
-//	      stmt.executeUpdate(command);
-//	      stmt.close();
-//	}
+	public static Boolean getBooleanFromStringValue(String value) {
+		return value.equals("1");
+	}
 }

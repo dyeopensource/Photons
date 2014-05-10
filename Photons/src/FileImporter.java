@@ -62,11 +62,20 @@ public class FileImporter {
 							Path targetFolder = Paths.get(pathToImportTo.toString(), fileImportedInfo.getSubfolder());
 							Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
-							// TODO: check existence in database (the only way to do it is by hash and length)
-							// Question: what to do if duplicate found? Log and skip?
-							// Offer comparison afterwords?
+							FileImportedInfo existingFileImportedInfo = null;
+							existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+							if (existingFileImportedInfo != null) {
+								MyLogger.displayActionMessage(String.format("FileInfo in the database with the same hash and size already exists.", targetPath));
+								MyLogger.displayActionMessage(String.format("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file));
+								if (existingFileImportedInfo.getImportEnabled()) {
+									MyLogger.displayActionMessage(String.format("Reimporting..."));
+								} else {
+									return FileVisitResult.CONTINUE;
+								}
+							}
 							
 							if (Files.exists(targetPath)) {
+								// TODO: maybe length and hash check would be nice here
 								MyLogger.displayActionMessage(String.format("Target file already exists [%s]. Skipping copy.", targetPath));
 							} else {
 								MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
@@ -90,9 +99,12 @@ public class FileImporter {
 								}
 								
 								DatabaseUtil.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
-								
-								// Verification of database insertion:
-								// TODO: add verification step
+								existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+								if (existingFileImportedInfo == null) {
+									// TODO: how to retry?
+									MyLogger.displayAndLogActionMessage(String.format("ERROR: error during database insert."));
+									return FileVisitResult.CONTINUE;
+								}
 								
 								MyLogger.displayAndLogActionMessage(String.format("File imported from: [%s] to [%s].", file, targetPath));
 							}
