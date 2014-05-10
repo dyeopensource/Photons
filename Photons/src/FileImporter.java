@@ -51,7 +51,7 @@ public class FileImporter {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 				{
-					MyLogger.displayActionMessage(String.format("Importing file [%s]...", file));
+					MyLogger.displayAndLogActionMessage(String.format("Importing file [%s]...", file));
 					
 					if (file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
 						FileToImportInfo fileToImportInfo = null;
@@ -66,9 +66,9 @@ public class FileImporter {
 							existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
 							if (existingFileImportedInfo != null) {
 								MyLogger.displayActionMessage(String.format("FileInfo in the database with the same hash and size already exists.", targetPath));
-								MyLogger.displayActionMessage(String.format("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file));
+								MyLogger.displayAndLogActionMessage(String.format("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file));
 								if (existingFileImportedInfo.getImportEnabled()) {
-									MyLogger.displayActionMessage(String.format("Reimporting..."));
+									MyLogger.displayAndLogActionMessage(String.format("Reimporting..."));
 								} else {
 									return FileVisitResult.CONTINUE;
 								}
