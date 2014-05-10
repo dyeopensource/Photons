@@ -51,9 +51,9 @@ public class FileImporter {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 				{
-					MyLogger.displayAndLogActionMessage(String.format("Importing file [%s]...", file));
-					
 					if (file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
+						MyLogger.displayAndLogActionMessage(String.format("Importing file [%s]...", file));
+						
 						FileToImportInfo fileToImportInfo = null;
 						try {
 							fileToImportInfo = new FileToImportInfo(file);
@@ -70,6 +70,7 @@ public class FileImporter {
 								if (existingFileImportedInfo.getImportEnabled()) {
 									MyLogger.displayAndLogActionMessage(String.format("Reimporting..."));
 								} else {
+									MyLogger.displayAndLogActionMessage(String.format("Skipping..."));
 									return FileVisitResult.CONTINUE;
 								}
 							}
