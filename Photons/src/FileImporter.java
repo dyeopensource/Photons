@@ -1,5 +1,5 @@
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
+//import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -7,7 +7,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.EnumSet;
+//import java.util.EnumSet;
 
 
 public class FileImporter {
@@ -33,7 +33,8 @@ public class FileImporter {
 		//System.out.println("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
 
 		// Next example with walkFileTree originates from http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
-		Files.walkFileTree(this.pathToImportFrom, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+		//Files.walkFileTree(this.pathToImportFrom, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
+		Files.walkFileTree(this.pathToImportFrom,
 			new SimpleFileVisitor<Path>() {
 //	             @Override
 //	             public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) throws IOException
@@ -77,7 +78,7 @@ public class FileImporter {
 							
 							if (Files.exists(targetPath)) {
 								// TODO: maybe length and hash check would be nice here
-								MyLogger.displayActionMessage(String.format("Target file already exists [%s]. Skipping copy.", targetPath));
+								MyLogger.displayActionMessage(String.format("ERROR: Target file already exists [%s]. Skipping copy.", targetPath));
 							} else {
 								MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
 								if (Files.exists(targetFolder)) {
