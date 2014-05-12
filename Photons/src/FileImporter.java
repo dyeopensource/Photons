@@ -81,13 +81,14 @@ public class FileImporter {
 								// This case can happen. E.g. if the picture was saved and resized
 								// to another location with the same name.
 								// But at least a warning should be logged to be able to check later.
-								MyLogger.displayAndLogActionMessage(String.format("WARNING: Target file already exists [%s]. Generating alternate file name.", targetPath));
-								targetPath = FileUtil.GetAlternateFileName(targetPath);
+								Path oldTargetPath = targetPath;
+								targetPath = FileUtil.GetAlternateFileName(oldTargetPath);
+								MyLogger.displayAndLogActionMessage(String.format("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath));
 							}
 							
 							MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
 							if (Files.exists(targetFolder)) {
-								MyLogger.displayActionMessage(String.format("Target folder already exists [%s].", targetFolder));
+								//MyLogger.displayActionMessage(String.format("Target folder already exists [%s].", targetFolder));
 							} else {
 								Files.createDirectories(targetFolder);
 							}
@@ -120,7 +121,7 @@ public class FileImporter {
 						}
 						
 					} else {
-						System.out.println(String.format("Ignoring file because of file type mismatch [%s].", file));
+						MyLogger.displayActionMessage(String.format("Ignoring file because of file type mismatch [%s].", file));
 					}
 
 					return FileVisitResult.CONTINUE;

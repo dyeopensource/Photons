@@ -23,7 +23,7 @@ public class FileUtil {
 		String extension = "";
 		int extensionSeparator = originalFileName.lastIndexOf('.');
 		if (extensionSeparator > 0) {
-			fileNameWithoutExtension = originalFileName.substring(0, extensionSeparator - 1);
+			fileNameWithoutExtension = originalFileName.substring(0, extensionSeparator);
 			extension = "." + originalFileName.substring(extensionSeparator + 1);
 		}
 		
