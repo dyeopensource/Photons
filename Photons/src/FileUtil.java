@@ -1,5 +1,8 @@
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 
@@ -11,6 +14,27 @@ public class FileUtil {
 
 	public static String getFileContentHash(String fileName) throws Exception {
 		return getChecksum(fileName, "SHA-256");
+	}
+
+	public static Path GetAlternateFileName(Path originalTargetPath) {
+		String originalPath = originalTargetPath.getParent().toString();
+		String originalFileName = originalTargetPath.getFileName().toString();
+		String fileNameWithoutExtension = originalFileName;
+		String extension = "";
+		int extensionSeparator = originalFileName.lastIndexOf('.');
+		if (extensionSeparator > 0) {
+			fileNameWithoutExtension = originalFileName.substring(0, extensionSeparator - 1);
+			extension = "." + originalFileName.substring(extensionSeparator + 1);
+		}
+		
+		int i = 1;
+		Path alternateFilePath = originalTargetPath;
+		while (Files.exists(alternateFilePath)) {
+			alternateFilePath = Paths.get(originalPath, String.format("%s (%d)%s", fileNameWithoutExtension, i, extension));
+			i++;
+		}
+		
+		return alternateFilePath;
 	}
 	
 	// Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html

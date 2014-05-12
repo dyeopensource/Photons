@@ -78,38 +78,42 @@ public class FileImporter {
 							
 							if (Files.exists(targetPath)) {
 								// TODO: maybe length and hash check would be nice here
-								MyLogger.displayActionMessage(String.format("ERROR: Target file already exists [%s]. Skipping copy.", targetPath));
-							} else {
-								MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
-								if (Files.exists(targetFolder)) {
-									MyLogger.displayActionMessage(String.format("Target folder already exists [%s].", targetFolder));
-								} else {
-									Files.createDirectories(targetFolder);
-								}
-								
-								Files.copy(file, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
-								
-								// Verification of file copy:
-								if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
-									MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath));
-									return FileVisitResult.CONTINUE;
-								}
-								
-								if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
-									MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath));
-									return FileVisitResult.CONTINUE;
-								}
-								
-								DatabaseUtil.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
-								existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
-								if (existingFileImportedInfo == null) {
-									// TODO: how to retry?
-									MyLogger.displayAndLogActionMessage(String.format("ERROR: error during database insert."));
-									return FileVisitResult.CONTINUE;
-								}
-								
-								MyLogger.displayAndLogActionMessage(String.format("File imported from: [%s] to [%s].", file, targetPath));
+								// This case can happen. E.g. if the picture was saved and resized
+								// to another location with the same name.
+								// But at least a warning should be logged to be able to check later.
+								MyLogger.displayAndLogActionMessage(String.format("WARNING: Target file already exists [%s]. Generating alternate file name.", targetPath));
+								targetPath = FileUtil.GetAlternateFileName(targetPath);
 							}
+							
+							MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
+							if (Files.exists(targetFolder)) {
+								MyLogger.displayActionMessage(String.format("Target folder already exists [%s].", targetFolder));
+							} else {
+								Files.createDirectories(targetFolder);
+							}
+							
+							Files.copy(file, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
+							
+							// Verification of file copy:
+							if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
+								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath));
+								return FileVisitResult.CONTINUE;
+							}
+							
+							if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
+								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath));
+								return FileVisitResult.CONTINUE;
+							}
+							
+							DatabaseUtil.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
+							existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+							if (existingFileImportedInfo == null) {
+								// TODO: how to retry?
+								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during database insert."));
+								return FileVisitResult.CONTINUE;
+							}
+							
+							MyLogger.displayAndLogActionMessage(String.format("File imported from: [%s] to [%s].", file, targetPath));
 						} catch (Exception e) {
 							MyLogger.displayAndLogActionMessage(String.format("ERROR: Failed to import file [%s].", file));
 							e.printStackTrace();
