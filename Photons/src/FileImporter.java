@@ -126,6 +126,12 @@ public class FileImporter {
 
 					return FileVisitResult.CONTINUE;
 				}
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException e) throws IOException {
+					MyLogger.displayAndLogActionMessage(String.format("ERROR: Failed to import file [%s].Reason: %s", file, e));
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
 			});
 		}
 }
