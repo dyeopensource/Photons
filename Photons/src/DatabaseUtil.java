@@ -1,6 +1,9 @@
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -43,53 +46,59 @@ public class DatabaseUtil {
 	private static final String fileInfoInsertCommand = "INSERT INTO fileinfo " +
 			"(originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
-			"VALUES ('%s', '%s', %d, '%s', %d, '%s', '%s', '%s', '%s', '%s', %d)";
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	private static final String selectFileInfoCommand = "SELECT " +
 			"id, originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
-			"FROM fileinfo WHERE originalHash='%s' AND originalLength=%d";
+			"FROM fileinfo WHERE originalHash=? AND originalLength=?";
 	
-	public static void openOrCreateDatabase(String folderPath) {
+	public static void openOrCreateDatabase(String folderPathString) {
 	    try {
-	      Class.forName("org.sqlite.JDBC");
-	      String connectionString = String.format("jdbc:sqlite:%s", Paths.get(folderPath, databaseFileName));
-	      Connection connection = DriverManager.getConnection(connectionString);
-	      
-		  String  version = "";
-		  try {
-			  Statement queryStatement = connection.createStatement();
-			  ResultSet resultSet = queryStatement.executeQuery(versionInfoQueryCommand);
-			  while ( resultSet.next() ) {
-				  version = resultSet.getString("value");
-			  }
-			  resultSet.close();
-			  queryStatement.close();
-			  
-			  if (version.equals("1.0")) {
-				  // OK
-				  MyLogger.displayActionMessage(String.format("Database already exists with expected version: [%s].", version));
-			  } else {
-				  throw new Exception(String.format("Unsupported database version: [%s].", version));
-			  }
-		  } catch ( Exception e ) {
-			  MyLogger.displayActionMessage(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
-
-			  Statement updateStatement = connection.createStatement();
-			  updateStatement.executeUpdate(configTableCreationCommand);
-			  updateStatement.executeUpdate(String.format(versionInfoInsertCommand, new Date().getTime()));
-			  updateStatement.executeUpdate(fileTableCreationCommand);
+	    	Path folderPath = Paths.get(folderPathString);
+	    	if (!Files.exists(folderPath)) {
+				MyLogger.displayAndLogActionMessage(String.format("Path does not exist. Creating folder [%s]...", folderPathString));
+	    		Files.createDirectories(folderPath);
+	    	}
+	    	
+	    	Class.forName("org.sqlite.JDBC");
+		    String connectionString = String.format("jdbc:sqlite:%s", Paths.get(folderPathString, databaseFileName));
+		    Connection connection = DriverManager.getConnection(connectionString);
 		      
-			  updateStatement.close();
-
-			  MyLogger.displayActionMessage("Created database successfully");
-		  }
-	      
-	      connection.close();
-	      
+			String  version = "";
+			try {
+				Statement queryStatement = connection.createStatement();
+				ResultSet resultSet = queryStatement.executeQuery(versionInfoQueryCommand);
+				while ( resultSet.next() ) {
+					version = resultSet.getString("value");
+				}
+				resultSet.close();
+				queryStatement.close();
+				  
+				if (version.equals("1.0")) {
+					// OK
+					MyLogger.displayAndLogActionMessage(String.format("Database already exists with expected version: [%s].", version));
+				} else {
+					throw new Exception(String.format("Unsupported database version: [%s].", version));
+				}
+			} catch ( Exception e ) {
+				MyLogger.displayActionMessage(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
+	
+				Statement updateStatement = connection.createStatement();
+				updateStatement.executeUpdate(configTableCreationCommand);
+				updateStatement.executeUpdate(String.format(versionInfoInsertCommand, new Date().getTime()));
+				updateStatement.executeUpdate(fileTableCreationCommand);
+			      
+				updateStatement.close();
+	
+				MyLogger.displayAndLogActionMessage("Created database successfully");
+			}
+		      
+		    connection.close();
+		      
 	    } catch ( Exception e ) {
-	      System.err.println(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
-	      System.exit(0);
+	    	System.err.println(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
+	    	System.exit(0);
 	    }
 	}
 	
@@ -106,22 +115,27 @@ public class DatabaseUtil {
 		try {
 			connection = DriverManager.getConnection(connectionString);
 			
-			String insertCommand = String.format(fileInfoInsertCommand,
-					fileInfo.getOriginalPath(),
-					fileInfo.getOriginalFileName(),
-					fileInfo.getOriginalLength(),
-					fileInfo.getOriginalHash(),
-					fileInfo.getOriginalLastModificationTime().getTime(),
-					fileInfo.getSubfolder(),
-					fileInfo.getFileName(),
-					getStringFromBoolValue(fileInfo.getImportEnabled()),
-					fileInfo.getType(),
-					fileInfo.getDescription(),
-					new Date().getTime());
+			//connection.setAutoCommit(false); If running multiple actions in a transaction
 			
-			  Statement insertStatement = connection.createStatement();
-			  insertStatement.executeUpdate(insertCommand);
-			  insertStatement.close();
+			PreparedStatement preparedInsertStatement = connection.prepareStatement(fileInfoInsertCommand);
+			
+			preparedInsertStatement.setString(1, fileInfo.getOriginalPath());
+			preparedInsertStatement.setString(2, fileInfo.getOriginalFileName());
+			preparedInsertStatement.setLong(3, fileInfo.getOriginalLength());
+			preparedInsertStatement.setString(4, fileInfo.getOriginalHash());
+			preparedInsertStatement.setLong(5, fileInfo.getOriginalLastModificationTime().getTime());
+			preparedInsertStatement.setString(6, fileInfo.getSubfolder());
+			preparedInsertStatement.setString(7, fileInfo.getFileName());
+			preparedInsertStatement.setString(8, getStringFromBoolValue(fileInfo.getImportEnabled()));
+			preparedInsertStatement.setString(9, fileInfo.getType());
+			preparedInsertStatement.setString(10, fileInfo.getDescription());
+			preparedInsertStatement.setLong(11, new Date().getTime());
+			
+			preparedInsertStatement.executeUpdate();
+			
+			preparedInsertStatement.close();
+			
+			//connection.commit(); If a transaction is necessary
 			
 			connection.close();
 		} catch (SQLException e) {
@@ -147,23 +161,25 @@ public class DatabaseUtil {
 		FileImportedInfo fileImportedInfo = null;
 		try {
 			connection = DriverManager.getConnection(connectionString);
+
+			PreparedStatement preparedQueryStatement = connection.prepareStatement(selectFileInfoCommand);
 			
-			String queryCommand = String.format(selectFileInfoCommand,
-					originalFileContentHash,
-					originalLength);
+			preparedQueryStatement.setString(1, originalFileContentHash);
+			preparedQueryStatement.setLong(2, originalLength);
 			
-			  Statement queryStatement = connection.createStatement();
-			  ResultSet resultSet = queryStatement.executeQuery(queryCommand);
-			  boolean fileImportedInfoWasAlreadyRetrieved = false;
-		      while ( resultSet.next() ) {
-		    	 if (fileImportedInfoWasAlreadyRetrieved) {
-		    		 // TODO: duplicate element found (same hash and length), what to do now????
-		    	 }
-		    	 fileImportedInfo = FileImportedInfo.getFileImportedInfoFromDatabase(resultSet);
-		    	 fileImportedInfoWasAlreadyRetrieved = true;
-		      }
-		      resultSet.close();
-			  queryStatement.close();
+			ResultSet resultSet = preparedQueryStatement.executeQuery();
+			
+			boolean fileImportedInfoWasAlreadyRetrieved = false;
+		    while ( resultSet.next() ) {
+		    	if (fileImportedInfoWasAlreadyRetrieved) {
+		    		// TODO: duplicate element found (same hash and length), what to do now????
+		    	}
+		    	fileImportedInfo = FileImportedInfo.getFileImportedInfoFromDatabase(resultSet);
+		    	fileImportedInfoWasAlreadyRetrieved = true;
+		    }
+		    resultSet.close();
+
+		    preparedQueryStatement.close();
 			
 			connection.close();
 		} catch (SQLException e) {
