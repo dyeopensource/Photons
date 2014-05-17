@@ -84,6 +84,8 @@ public class FileImporter {
 								Path oldTargetPath = targetPath;
 								targetPath = FileUtil.GetAlternateFileName(oldTargetPath);
 								MyLogger.displayAndLogActionMessage(String.format("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath));
+								
+								fileImportedInfo.setFileName(targetPath.getFileName().toString());
 							}
 							
 							MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
