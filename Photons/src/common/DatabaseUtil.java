@@ -1,3 +1,5 @@
+package common;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,6 +10,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Date;
+
+import modell.FileImportedInfo;
 
 
 public class DatabaseUtil {
@@ -197,5 +201,19 @@ public class DatabaseUtil {
 	
 	public static Boolean getBooleanFromStringValue(String value) {
 		return value.equals("1");
+	}
+
+	public static long getLongTimeStampCurrent() {
+		return new Date().getTime();
+	}
+	
+	public static void CheckSQLite() {
+	    try {
+			Class.forName("org.sqlite.JDBC");
+		} catch (ClassNotFoundException e) {
+			// TODO: imnprove logging
+			e.printStackTrace();
+			System.exit(0);
+		}
 	}
 }

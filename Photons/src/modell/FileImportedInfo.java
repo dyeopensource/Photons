@@ -1,6 +1,12 @@
+package modell;
+
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
+
+
+import common.DatabaseUtil;
+import common.FileUtil;
 
 
 public class FileImportedInfo {
