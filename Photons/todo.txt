@@ -1,0 +1,32 @@
+Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
+Should not be static, default filename should be fileinfo.sqlite
+
+Errors should be logged, not only displayed
+
+Tests:
+
+- check for test (maintenance) tools
+
+Create tests for the project:
+- have sample Canon memory card copy with every possible kind of 
+	- photos and 
+	- videos
+- have sample Sony memory stick copy with every possible kind of
+	- photos,
+	- SD and
+	- HD videos,
+	- including wide screen settings also, maybe captured sound if possible
+- Database should be tested:
+	- created if does not exist
+	- opened if current version
+	- opened if not current version + check migration
+- Import should be tested:
+	- simple file not in database
+	- file with no access rights
+	- not existing file (is it possible?)
+	- every kind of links (shortcuts) - to avoid looping
+	- file with different name, different content
+	- file with same content, different name
+	- file with same name, different path, same content
+- Check not only the actions but also logging
+
