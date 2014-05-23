@@ -16,7 +16,11 @@ import org.junit.Test;
 
 import common.FileUtil;
 
-
+/**
+ * Tests for the common.FileUtil class
+ * @author emil
+ *
+ */
 public class FileUtilTest {
 
 	@BeforeClass
