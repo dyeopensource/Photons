@@ -1,6 +1,11 @@
 package common;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,7 +22,7 @@ public class FileUtil {
 		return getChecksum(fileName, "SHA-256");
 	}
 
-	public static Path GetAlternateFileName(Path originalTargetPath) {
+	public static Path getAlternateFileName(Path originalTargetPath) {
 		String originalPath = originalTargetPath.getParent().toString();
 		String originalFileName = originalTargetPath.getFileName().toString();
 		String fileNameWithoutExtension = originalFileName;
@@ -63,4 +68,18 @@ public class FileUtil {
 	      fis.close();  
 	      return complete.digest();  
 	} 
+
+	public static void writeToFile(String fileNameWithPath, String text) throws IOException {
+		Writer writer = null;
+		try {
+		    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileNameWithPath), "utf-8"));
+		    writer.write(text);
+		} finally {
+		   try {
+			   writer.close();
+		   } catch (Exception ex) {
+			   // Oops...
+		   }
+		}
+    }
 }

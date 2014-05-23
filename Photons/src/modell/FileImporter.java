@@ -12,7 +12,6 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 //import java.util.EnumSet;
 
-import common.DatabaseUtil;
 import common.FileUtil;
 import common.MyLogger;
 
@@ -28,10 +27,14 @@ public class FileImporter {
 	
 	private String fileExtensionToImport;
 	
+	private FileInfoDatabase fileInfoDatabase;
+	
 	public FileImporter(String pathToImportFrom, String pathToImportTo, String fileExtensionToImport) {
 		this.pathToImportFrom = Paths.get(pathToImportFrom);
 		this.pathToImportTo = Paths.get(pathToImportTo);
 		this.fileExtensionToImport = fileExtensionToImport;
+		
+		this.fileInfoDatabase = new FileInfoDatabase(this.pathToImportTo);
 	}
 	
 	public void Import() throws IOException {
@@ -71,7 +74,7 @@ public class FileImporter {
 							Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
 							FileImportedInfo existingFileImportedInfo = null;
-							existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+							existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
 							if (existingFileImportedInfo != null) {
 								MyLogger.displayActionMessage(String.format("FileInfo in the database with the same hash and size already exists.", targetPath));
 								MyLogger.displayAndLogActionMessage(String.format("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file));
@@ -89,7 +92,7 @@ public class FileImporter {
 								// to another location with the same name.
 								// But at least a warning should be logged to be able to check later.
 								Path oldTargetPath = targetPath;
-								targetPath = FileUtil.GetAlternateFileName(oldTargetPath);
+								targetPath = FileUtil.getAlternateFileName(oldTargetPath);
 								MyLogger.displayAndLogActionMessage(String.format("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath));
 								
 								fileImportedInfo.setFileName(targetPath.getFileName().toString());
@@ -115,8 +118,8 @@ public class FileImporter {
 								return FileVisitResult.CONTINUE;
 							}
 							
-							DatabaseUtil.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
-							existingFileImportedInfo = DatabaseUtil.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+							fileInfoDatabase.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
+							existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
 							if (existingFileImportedInfo == null) {
 								// TODO: how to retry?
 								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during database insert."));

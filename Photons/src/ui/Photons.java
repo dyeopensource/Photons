@@ -6,7 +6,6 @@ import java.util.Date;
 
 import modell.FileImporter;
 
-import common.DatabaseUtil;
 import common.MyLogger;
 
 
@@ -40,8 +39,6 @@ public class Photons {
 		//logFileNameWithPath = Paths.get(destinationPath, "log_" + dateTimeFormatter.format(new Date()) + ".txt").toString();
 		MyLogger.setActionLogFile(Paths.get(destinationPath, String.format("actions_%s.txt", dateTimeFormatter.format(new Date()))).toString());
         //String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
-		
-		DatabaseUtil.openOrCreateDatabase(destinationPath);
 		
 		FileImporter fileImporter = new FileImporter(sourcePath, destinationPath, type);
 		try {

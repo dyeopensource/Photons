@@ -1,3 +1,8 @@
+Feature:
+- duplicate sources: in new table (can be a source of arrangement)
+- maybe sound files can be stored also this way - but in this case the file date is not the primary sorting key
+- and also this software could be used to backup every kind of data - in this case restore could be an interesting task + duplicate finding
+
 Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
 Should not be static, default filename should be fileinfo.sqlite
 
@@ -16,6 +21,14 @@ Create tests for the project:
 	- SD and
 	- HD videos,
 	- including wide screen settings also, maybe captured sound if possible
+- have sample Samsung memory card copy with all kinds of possible media:
+	- photo
+	- video
+	- sound
+- have sample DM memory card copy with every possible kind of media:
+	- photo
+	- video
+	- sound
 - Database should be tested:
 	- created if does not exist
 	- opened if current version
