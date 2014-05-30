@@ -1,6 +1,7 @@
 package modell;
 
 import java.io.File;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Date;
@@ -29,31 +30,33 @@ public class FileToImportInfo {
 	 * @throws Exception
 	 */
 	public FileToImportInfo(Path path) throws Exception {
-		this.path = path.getParent().toString();
-		this.fileName = path.getFileName().toString();
-		this.fileNameWithPath = path.toString();
-		setFileData();
+		Path realPath = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
+		setFileData(realPath);
 	}
 	
 	/**
 	 * Class constructor from the path and name of the file
-	 * @param path		The String containing the path to the file
+	 * @param path		The String containing the path to the file (can be relative or absolute)
 	 * @param fileName	The String containing the name of the file
 	 * @throws Exception
 	 */
 	public FileToImportInfo(String path, String fileName) throws Exception {
-		this.path = path;
-		this.fileName = fileName;
-		this.fileNameWithPath = Paths.get(this.path, this.fileName).toString();
-		setFileData();
+		Path realPath = Paths.get(path, fileName).toRealPath(LinkOption.NOFOLLOW_LINKS);
+		setFileData(realPath);
 	}
 	
 	/**
 	 * Sets length, last modification time and hash of the file
+	 * @param realPath		The real full path with filename.
 	 * @throws Exception
 	 */
-	private void setFileData() throws Exception {
+	private void setFileData(Path realPath) throws Exception {
+		this.path = realPath.getParent().toString();
+		this.fileName = realPath.getFileName().toString();
+		this.fileNameWithPath = realPath.toString();
+
 		File thisFile = new File(this.fileNameWithPath);
+		
 		this.length = thisFile.length();
 		this.lastModificationTime = new Date(thisFile.lastModified());
 		this.hash = FileUtil.getFileContentHash(this.fileNameWithPath);
