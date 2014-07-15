@@ -1,11 +1,14 @@
 package common;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 
+/**
+ * Class for logging methods
+ * @author emil
+ * TODO: this class is not tested yet
+ *
+ */
 public class MyLogger {
 
 	//private static String logFileNameWithPath;
@@ -23,22 +26,21 @@ public class MyLogger {
 	public static void displayActionMessage(String message) {
 		System.out.println(message);
 	}
+
+	public static void displayAndLogException(Exception e) {
+		displayException(e);
+		logAction(e.getMessage());
+	}
+
+	public static void displayException(Exception e) {
+		e.printStackTrace();
+	}
 	
 	private static void logAction(String action) {
-		BufferedWriter writer = null;
-        try {
-            File logFile = new File(actionLogFile);
-            writer = new BufferedWriter(new FileWriter(logFile, true));
-            writer.write(String.format("%s - %s\n", dateTimeLogFormatter.format(new Date()), action));
-        } catch (Exception e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                // Close the writer regardless of what happens...
-                writer.close();
-            } catch (Exception e) {
-            }
-        }
+		FileUtil.writeToFile(
+				actionLogFile,
+				String.format("%s - %s\n", dateTimeLogFormatter.format(new Date()), action),
+				true);
     }
 	
 //	public static String getActionLogFile() {
@@ -48,6 +50,7 @@ public class MyLogger {
 	public static void setActionLogFile(String actionLogFile) {
 		MyLogger.actionLogFile = actionLogFile;
 	}
+
 	
 //	public static String getLogFile() {
 //		return logFile;

@@ -1,11 +1,9 @@
 package common;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.FileWriter;
 import java.io.InputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,15 +11,36 @@ import java.security.MessageDigest;
 import java.text.SimpleDateFormat;
 
 
+/**
+ * A common class for general file operations
+ * @author emil
+ *
+ */
 public class FileUtil {
 
-	//public static SimpleDateFormat simpleDateFormatter = new SimpleDateFormat("yyyyMMdd");  
+	//public static SimpleDateFormat simpleDateFormatter = new SimpleDateFormat("yyyyMMdd");
+	
+	/**
+	 * This format will be used to generate subfolders based on Date objects
+	 */
 	public static SimpleDateFormat subfolderDateFormatter = new SimpleDateFormat("yyyy/MM/dd");  
 
+	/**
+	 * Gets an SHA-256 hash string of the content of the file
+	 * @param fileName		The name of the file to hash with full path
+	 * @return				A string containing the hash string
+	 * @throws Exception
+	 */
 	public static String getFileContentHash(String fileName) throws Exception {
 		return getChecksum(fileName, "SHA-256");
 	}
 
+	/**
+	 * If the target file already exists, generates an alternate filename with a sequence number
+	 * appended at the end of the filename.
+	 * @param originalTargetPath	The full path and filename of the original file
+	 * @return						A filename with full path which does not exist, but is in the same folder as the original
+	 */
 	public static Path getAlternateFileName(Path originalTargetPath) {
 		String originalPath = originalTargetPath.getParent().toString();
 		String originalFileName = originalTargetPath.getFileName().toString();
@@ -43,7 +62,39 @@ public class FileUtil {
 		return alternateFilePath;
 	}
 	
-	// Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html
+	/**
+	 * Appends text to the file. Does not add new line!
+	 * @param fileNameWithFullPath	The file to open for write/append
+	 * @param text					The text to write into the text file
+	 * @param append				True if the text should be appended to the file, false if overwrite requested
+	 * TODO: this method is not tested yet
+	 */
+	public static void writeToFile(String fileNameWithFullPath, String text, boolean append) {
+		BufferedWriter writer = null;
+        try {
+            File textFile = new File(fileNameWithFullPath);
+            writer = new BufferedWriter(new FileWriter(textFile, append));
+            writer.write(text);
+        } catch (Exception e) {
+    		MyLogger.displayException(e);
+        } finally {
+            try {
+                // Close the writer regardless of what happens...
+                writer.close();
+            } catch (Exception e) {
+        		MyLogger.displayException(e);
+            }
+        }
+    }
+	
+	/**
+	 * TODO: document
+	 * @param fileName
+	 * @param algo
+	 * @return
+	 * @throws Exception
+	 * @link Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html
+	 */
 	private static String getChecksum(String fileName, String algo) throws Exception {  
 	      byte[] b = createChecksum(fileName, algo);  
 	      String result = "";  
@@ -53,7 +104,14 @@ public class FileUtil {
 	      return result;  
 	}
 	
-	// Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html
+	/**
+	 * TODO: document
+	 * @param fileName
+	 * @param algo
+	 * @return
+	 * @throws Exception
+	 * @link Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html
+	 */
 	private static byte[] createChecksum(String fileName, String algo) throws Exception{  
 	      InputStream fis = new FileInputStream(fileName);  
 	      byte[] buffer = new byte[1024];  
@@ -68,18 +126,4 @@ public class FileUtil {
 	      fis.close();  
 	      return complete.digest();  
 	} 
-
-	public static void writeToFile(String fileNameWithPath, String text) throws IOException {
-		Writer writer = null;
-		try {
-		    writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileNameWithPath), "utf-8"));
-		    writer.write(text);
-		} finally {
-		   try {
-			   writer.close();
-		   } catch (Exception ex) {
-			   // Oops...
-		   }
-		}
-    }
 }

@@ -1,7 +1,15 @@
 Feature:
+- If calendar import will be possible then UTC timestamp will be advisable.. -> Check java Date handling
+- Check logging / output...
+- We could use media datetime information (EXIF) 
 - duplicate sources: in new table (can be a source of arrangement)
 - maybe sound files can be stored also this way - but in this case the file date is not the primary sorting key
 - and also this software could be used to backup every kind of data - in this case restore could be an interesting task + duplicate finding
+- Import events from google calendar. This contains events on which photos and videos were made. -> Media description/album title candidate.
+	My photo/video calendar:
+		Private:
+			XML: https://www.google.com/calendar/feeds/svc17q0q6lcmbhags47f5kkdus%40group.calendar.google.com/private-0c491ab331be3acf32566b2384058e90/basic
+			ICAL: https://www.google.com/calendar/ical/svc17q0q6lcmbhags47f5kkdus%40group.calendar.google.com/private-0c491ab331be3acf32566b2384058e90/basic.ics
 
 Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
 Should not be static, default filename should be fileinfo.sqlite

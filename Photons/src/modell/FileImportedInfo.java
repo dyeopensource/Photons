@@ -15,14 +15,20 @@ public class FileImportedInfo {
 	
 	private long originalLength;
 	private String originalHash;
-	private Date originalLastModificationTime;
+	
+	// TODO: create field for storing timezone information
+	// TODO: use it: private MediaFileDate date;
+	
+	private Date originalFileLastModificationTime;
+	private Date mediaContentTimestamp;
+	private Date utcTimestamp;
 	
 	private String subFolder;
 	private String fileName;
 	
 	private Boolean importEnabled;
 	
-	private String type;
+	private int type;
 	private String description;
 	
 	private long id;
@@ -36,18 +42,17 @@ public class FileImportedInfo {
 
 		this.originalLength = originalFileInfo.getLength();
 		this.originalHash = originalFileInfo.getHash();
-		this.originalLastModificationTime = originalFileInfo.getLastModificationTime();
-		
-		this.subFolder = FileUtil.subfolderDateFormatter.format(this.originalLastModificationTime);
+		this.originalFileLastModificationTime = originalFileInfo.getLastModificationTime();
+		this.subFolder = FileUtil.subfolderDateFormatter.format(this.originalFileLastModificationTime);
 		this.fileName = originalFileInfo.getFileName();
 		
 		this.importEnabled = false;
 		
 		if (this.originalFileName.toLowerCase().endsWith(".jpg")) {
-			this.type = "jpg";
+			this.type = 1;
 		}
 		else {
-			this.type = "?";
+			this.type = 0;
 		}
 		
 		this.description = "";
@@ -71,7 +76,7 @@ public class FileImportedInfo {
 			fileImportedInfo.setSubfolder(resultSet.getString("subFolder"));
 			fileImportedInfo.setFileName(resultSet.getString("fileName"));
 			fileImportedInfo.setImportEnabled(DatabaseUtil.getBooleanFromStringValue(resultSet.getString("importEnabled")));
-			fileImportedInfo.setType(resultSet.getString("type"));
+			fileImportedInfo.setType(resultSet.getInt("type"));
 			fileImportedInfo.setDescription(resultSet.getString("description"));
 			fileImportedInfo.setRecordLastModificationTime(new Date(resultSet.getLong("recordLastModificationTime")));
 			fileImportedInfo.setDeleted(DatabaseUtil.getBooleanFromStringValue(resultSet.getString("deleted")));
@@ -118,11 +123,11 @@ public class FileImportedInfo {
 	}
 
 	public Date getOriginalLastModificationTime() {
-		return originalLastModificationTime;
+		return originalFileLastModificationTime;
 	}
 
 	private void setOriginalLastModificationTime(Date originalLastModificationTime) {
-		this.originalLastModificationTime = originalLastModificationTime;
+		this.originalFileLastModificationTime = originalLastModificationTime;
 	}
 
 	public String getSubfolder() {
@@ -141,11 +146,11 @@ public class FileImportedInfo {
 		this.importEnabled = importEnabled;
 	}
 
-	public String getType() {
+	public int getType() {
 		return type;
 	}
 
-	private void setType(String type) {
+	private void setType(int type) {
 		this.type = type;
 	}
 
@@ -187,5 +192,23 @@ public class FileImportedInfo {
 
 	public void setDeleted(Boolean deleted) {
 		this.deleted = deleted;
+	}
+
+	
+	public Date getMediaContentTimestamp() {
+		return mediaContentTimestamp;
+	}
+	
+
+	public void setMediaContentTimestamp(Date mediaContentTimestamp) {
+		this.mediaContentTimestamp = mediaContentTimestamp;
+	}
+
+	public Date getUtcTimestamp() {
+		return utcTimestamp;
+	}
+
+	public void setUtcTimestamp(Date utcTimestamp) {
+		this.utcTimestamp = utcTimestamp;
 	}
 }

@@ -18,7 +18,7 @@ import common.MyLogger;
 public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
-	private static final String versionString = "1.0";
+	private static final String versionString = "1.1";
 	private static final String configTableCreationCommandSql = "CREATE TABLE config " +
 			"(id							INTEGER		PRIMARY KEY, " +
 			"key							TEXT		NOT NULL, " +
@@ -37,7 +37,7 @@ public class FileInfoDatabase {
 			"subFolder						TEXT	NOT NULL, " +
 			"fileName						TEXT	NOT NULL, " +
 			"importEnabled					INTEGER	NOT NULL, " +
-			"type							TEXT	NOT NULL, " +
+			"type							INTEGER	NOT NULL, " +
 			"description					TEXT	NOT NULL, " +
 			"recordLastModificationTime		INTEGER	NOT NULL, " +
 			"deleted						INTEGER	DEFAULT 0)";
@@ -91,6 +91,9 @@ public class FileInfoDatabase {
 				queryStatement.close();
 				  
 				if (version.equals("1.0")) {
+					throw new Exception(String.format("Unsupported outdated database version: [%s].", version));
+				}
+				else if (version.equals(versionString)) {
 					// OK
 					MyLogger.displayAndLogActionMessage(String.format("Database already exists with expected version: [%s].", version));
 				} else {
@@ -136,7 +139,7 @@ public class FileInfoDatabase {
 			preparedInsertStatement.setString(6, fileInfo.getSubfolder());
 			preparedInsertStatement.setString(7, fileInfo.getFileName());
 			preparedInsertStatement.setString(8, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
-			preparedInsertStatement.setString(9, fileInfo.getType());
+			preparedInsertStatement.setInt(9, fileInfo.getType());
 			preparedInsertStatement.setString(10, fileInfo.getDescription());
 			preparedInsertStatement.setLong(11, new Date().getTime());
 			
