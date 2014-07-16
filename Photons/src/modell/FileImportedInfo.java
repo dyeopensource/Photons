@@ -16,7 +16,7 @@ public class FileImportedInfo {
 	private long originalLength;
 	private String originalHash;
 	
-	// TODO: create field for storing timezone information
+	// TODO: create field for storing time-zone information
 	// TODO: use it: private MediaFileDate date;
 	
 	private Date originalFileLastModificationTime;
