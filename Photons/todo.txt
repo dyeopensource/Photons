@@ -1,0 +1,53 @@
+Feature:
+- If calendar import will be possible then UTC timestamp will be advisable.. -> Check java Date handling
+- Check logging / output...
+- We could use media datetime information (EXIF) 
+- duplicate sources: in new table (can be a source of arrangement)
+- maybe sound files can be stored also this way - but in this case the file date is not the primary sorting key
+- and also this software could be used to backup every kind of data - in this case restore could be an interesting task + duplicate finding
+- Import events from google calendar. This contains events on which photos and videos were made. -> Media description/album title candidate.
+	My photo/video calendar:
+		Private:
+			XML: https://www.google.com/calendar/feeds/svc17q0q6lcmbhags47f5kkdus%40group.calendar.google.com/private-0c491ab331be3acf32566b2384058e90/basic
+			ICAL: https://www.google.com/calendar/ical/svc17q0q6lcmbhags47f5kkdus%40group.calendar.google.com/private-0c491ab331be3acf32566b2384058e90/basic.ics
+
+Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
+Should not be static, default filename should be fileinfo.sqlite
+
+Errors should be logged, not only displayed
+
+Tests:
+
+- check for test (maintenance) tools
+
+Create tests for the project:
+- have sample Canon memory card copy with every possible kind of 
+	- photos and 
+	- videos
+- have sample Sony memory stick copy with every possible kind of
+	- photos,
+	- SD and
+	- HD videos,
+	- including wide screen settings also, maybe captured sound if possible
+- have sample Samsung memory card copy with all kinds of possible media:
+	- photo
+	- video
+	- sound
+- have sample DM memory card copy with every possible kind of media:
+	- photo
+	- video
+	- sound
+- Database should be tested:
+	- created if does not exist
+	- opened if current version
+	- opened if not current version + check migration
+- Import should be tested:
+	- simple file not in database
+	- file with no access rights
+	- not existing file (is it possible?)
+	- every kind of links (shortcuts) - to avoid looping
+	- file with different name, different content
+	- file with same content, different name
+	- file with same name, different path, same content
+- Check not only the actions but also logging
+
