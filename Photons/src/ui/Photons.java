@@ -1,11 +1,11 @@
 package ui;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import modell.FileImporter;
-
 import common.MyLogger;
 
 
@@ -36,9 +36,14 @@ public class Photons {
 			type = args[2];
 		}
 		
-		//logFileNameWithPath = Paths.get(destinationPath, "log_" + dateTimeFormatter.format(new Date()) + ".txt").toString();
-		MyLogger.setActionLogFile(Paths.get(destinationPath, String.format("actions_%s.txt", dateTimeFormatter.format(new Date()))).toString());
-        //String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
+		final Path logPath = Paths.get(destinationPath, String.format("actions_%s.txt", dateTimeFormatter.format(new Date())));
+		try {
+			MyLogger.setActionLogFile(logPath);
+		} catch (IOException e) {
+			System.err.println(String.format("Could not create logfile '%s'.", logPath));
+			e.printStackTrace();
+			System.exit(2);
+		}
 		
 		FileImporter fileImporter = new FileImporter(sourcePath, destinationPath, type);
 		try {

@@ -2,6 +2,9 @@ package common;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -16,7 +19,7 @@ public class MyLogger {
 	private static SimpleDateFormat dateTimeLogFormatter = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss.SSS");  
 	//private static final Logger fileLogger=Logger.getLogger("Photons");
 	
-	private static String actionLogFile;
+	private static Path logPath;
 	//private static String logFile;
 	
 	public static void displayAndLogActionMessage(String format, Object... args) {
@@ -40,8 +43,12 @@ public class MyLogger {
 		e.printStackTrace();
 	}
 
-	public static void setActionLogFile(String actionLogFile) {
-		MyLogger.actionLogFile = actionLogFile;
+	public static void setActionLogFile(Path logPath) throws IOException {
+		Path logFolder = logPath.getParent();
+		if (!Files.exists(logFolder)) {
+			Files.createDirectories(logFolder);
+		}
+		MyLogger.logPath = logPath;
 	}
 
 	private static void displayMessage(String message) {
@@ -51,7 +58,7 @@ public class MyLogger {
 	private static void logMessage(String message) {
 		BufferedWriter writer = null;
 		try {
-		    File textFile = new File(actionLogFile);
+		    File textFile = logPath.toFile();
 		    writer = new BufferedWriter(new FileWriter(textFile, true));
 		    writer.write(String.format("%s - %s\n", dateTimeLogFormatter.format(new Date()), message));
 		} catch (Exception e) {
