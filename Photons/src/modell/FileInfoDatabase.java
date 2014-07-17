@@ -18,15 +18,19 @@ import common.MyLogger;
 public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
+
 	private static final String versionString = "1.1";
-	private static final String configTableCreationCommandSql = "CREATE TABLE config " +
+	private static final String configCreateCommandSql = "CREATE TABLE config " +
 			"(id							INTEGER		PRIMARY KEY, " +
 			"key							TEXT		NOT NULL, " +
 			"value							TEXT		NOT NULL, " +
 			"recordLastModificationTime		INTEGER		NOT NULL, " +
 			"deleted						INTEGER		DEFAULT 0)";
-	private static final String versionInfoInsertCommandSql = "INSERT INTO config (key, value, recordLastModificationTime) " +
+	private static final String configVersionInsertCommandSql = "INSERT INTO config (key, value, recordLastModificationTime) " +
 			"VALUES ('version', '" + versionString + "', %d)";
+	private static final String configVersionSelectCommandSql = "SELECT value, recordLastModificationTime " +
+			"FROM config WHERE key = 'version' ORDER BY value ASC";
+
 	private static final String fileTableCreationCommandSql = "CREATE TABLE fileinfo " +
 			"(id							INTEGER	PRIMARY KEY, " +
 			"originalPath					TEXT	NOT NULL, " +
@@ -83,13 +87,13 @@ public class FileInfoDatabase {
 			String  version = "";
 			try {
 				Statement queryStatement = connection.createStatement();
-				ResultSet resultSet = queryStatement.executeQuery(configTableCreationCommandSql);
+				ResultSet resultSet = queryStatement.executeQuery(configVersionSelectCommandSql);
 				while ( resultSet.next() ) {
 					version = resultSet.getString("value");
 				}
 				resultSet.close();
 				queryStatement.close();
-				  
+
 				if (version.equals("1.0")) {
 					throw new Exception(String.format("Unsupported outdated database version: [%s].", version));
 				}
@@ -103,8 +107,8 @@ public class FileInfoDatabase {
 				MyLogger.displayException(e);
 	
 				Statement updateStatement = connection.createStatement();
-				updateStatement.executeUpdate(configTableCreationCommandSql);
-				updateStatement.executeUpdate(String.format(versionInfoInsertCommandSql, DatabaseUtil.getLongTimeStampCurrent()));
+				updateStatement.executeUpdate(configCreateCommandSql);
+				updateStatement.executeUpdate(String.format(configVersionInsertCommandSql, DatabaseUtil.getLongTimeStampCurrent()));
 				updateStatement.executeUpdate(fileTableCreationCommandSql);
 			      
 				updateStatement.close();
