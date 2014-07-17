@@ -5,8 +5,10 @@ import java.sql.SQLException;
 import java.util.Date;
 
 
+
 import common.DatabaseUtil;
 import common.FileUtil;
+import common.MyLogger;
 
 
 public class FileImportedInfo {
@@ -82,8 +84,7 @@ public class FileImportedInfo {
 			fileImportedInfo.setDeleted(DatabaseUtil.getBooleanFromStringValue(resultSet.getString("deleted")));
 			
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MyLogger.displayException(e);
 			return null;
 		}
 		

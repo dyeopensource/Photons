@@ -74,7 +74,7 @@ public class FileInfoDatabase {
 			DatabaseUtil.CheckSQLite();
 
 			if (!Files.exists(this.databaseFolder)) {
-				MyLogger.displayAndLogActionMessage(String.format("Path does not exist. Creating folder [%s]...", this.databaseFolder));
+				MyLogger.displayAndLogActionMessage("Path does not exist. Creating folder [%s]...", this.databaseFolder);
 	    		Files.createDirectories(this.databaseFolder);
 	    	}
 	    	
@@ -95,12 +95,12 @@ public class FileInfoDatabase {
 				}
 				else if (version.equals(versionString)) {
 					// OK
-					MyLogger.displayAndLogActionMessage(String.format("Database already exists with expected version: [%s].", version));
+					MyLogger.displayAndLogActionMessage("Database already exists with expected version: [%s].", version);
 				} else {
 					throw new Exception(String.format("Unsupported database version: [%s].", version));
 				}
 			} catch ( Exception e ) {
-				MyLogger.displayActionMessage(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
+				MyLogger.displayException(e);
 	
 				Statement updateStatement = connection.createStatement();
 				updateStatement.executeUpdate(configTableCreationCommandSql);
@@ -111,12 +111,9 @@ public class FileInfoDatabase {
 	
 				MyLogger.displayAndLogActionMessage("Created database successfully");
 			}
-		      
 		    connection.close();
-		      
 	    } catch ( Exception e ) {
-			// TODO: imnprove logging
-	    	System.err.println(String.format("%s: %s", e.getClass().getName(), e.getMessage()));
+	    	MyLogger.displayAndLogException(e);
 	    	System.exit(0);
 	    }
 	}
@@ -151,8 +148,7 @@ public class FileInfoDatabase {
 			
 			connection.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MyLogger.displayAndLogException(e);
 			System.exit(0);
 		}
 	}
@@ -188,8 +184,7 @@ public class FileInfoDatabase {
 			
 			connection.close();
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MyLogger.displayAndLogException(e);
 			System.exit(0);
 		}
 		

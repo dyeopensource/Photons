@@ -1,8 +1,5 @@
 package common;
-import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileWriter;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -61,31 +58,6 @@ public class FileUtil {
 		
 		return alternateFilePath;
 	}
-	
-	/**
-	 * Appends text to the file. Does not add new line!
-	 * @param fileNameWithFullPath	The file to open for write/append
-	 * @param text					The text to write into the text file
-	 * @param append				True if the text should be appended to the file, false if overwrite requested
-	 * TODO: this method is not tested yet
-	 */
-	public static void writeToFile(String fileNameWithFullPath, String text, boolean append) {
-		BufferedWriter writer = null;
-        try {
-            File textFile = new File(fileNameWithFullPath);
-            writer = new BufferedWriter(new FileWriter(textFile, append));
-            writer.write(text);
-        } catch (Exception e) {
-    		MyLogger.displayException(e);
-        } finally {
-            try {
-                // Close the writer regardless of what happens...
-                writer.close();
-            } catch (Exception e) {
-        		MyLogger.displayException(e);
-            }
-        }
-    }
 	
 	/**
 	 * TODO: document

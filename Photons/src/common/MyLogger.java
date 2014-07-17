@@ -1,4 +1,7 @@
 package common;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -10,45 +13,57 @@ import java.util.Date;
  *
  */
 public class MyLogger {
-
-	//private static String logFileNameWithPath;
 	private static SimpleDateFormat dateTimeLogFormatter = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss.SSS");  
 	//private static final Logger fileLogger=Logger.getLogger("Photons");
 	
 	private static String actionLogFile;
 	//private static String logFile;
 	
-	public static void displayAndLogActionMessage(String message) {
-		displayActionMessage(message);
-		logAction(message);
+	public static void displayAndLogActionMessage(String format, Object... args) {
+		String message = String.format(format, args);
+		displayMessage(message);
+		logMessage(message);
 	}
 	
-	public static void displayActionMessage(String message) {
-		System.out.println(message);
+	public static void displayActionMessage(String format, Object... args) {
+		String message = String.format(format, args);
+		displayMessage(message);
 	}
 
 	public static void displayAndLogException(Exception e) {
 		displayException(e);
-		logAction(e.getMessage());
+		logMessage(e.getMessage());
 	}
 
 	public static void displayException(Exception e) {
+		//displayActionMessage("%s: %s", e.getClass().getName(), e.getMessage());
 		e.printStackTrace();
 	}
-	
-	private static void logAction(String action) {
-		FileUtil.writeToFile(
-				actionLogFile,
-				String.format("%s - %s\n", dateTimeLogFormatter.format(new Date()), action),
-				true);
-    }
-	
-//	public static String getActionLogFile() {
-//		return actionLogFile;
-//	}
-	
+
 	public static void setActionLogFile(String actionLogFile) {
 		MyLogger.actionLogFile = actionLogFile;
+	}
+
+	private static void displayMessage(String message) {
+		System.out.println(message);
+	}
+
+	private static void logMessage(String message) {
+		BufferedWriter writer = null;
+		try {
+		    File textFile = new File(actionLogFile);
+		    writer = new BufferedWriter(new FileWriter(textFile, true));
+		    writer.write(String.format("%s - %s\n", dateTimeLogFormatter.format(new Date()), message));
+		} catch (Exception e) {
+			displayException(e);
+		} finally {
+		    try {
+		        // Close the writer regardless of what happens...
+		        writer.close();
+		    } catch (Exception e) {
+				displayException(e);
+		    }
+		}
 	}
 
 	

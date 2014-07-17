@@ -39,7 +39,7 @@ public class FileImporter {
 	
 	public void Import() throws IOException {
 
-		MyLogger.displayAndLogActionMessage(String.format("Importing files from [%s] to [%s]", this.pathToImportFrom, this.pathToImportTo));
+		MyLogger.displayAndLogActionMessage("Importing files from [%s] to [%s]", this.pathToImportFrom, this.pathToImportTo);
 		//System.out.println("Importing files from [" + this.pathToImportFrom.toString() + "] to [" + this.pathToImportTo.toString() + "]");
 
 		// Next example with walkFileTree originates from http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
@@ -63,11 +63,10 @@ public class FileImporter {
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
 				{
 					if (file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
-						MyLogger.displayAndLogActionMessage(String.format("Importing file [%s]...", file));
+						MyLogger.displayAndLogActionMessage("Importing file [%s]...", file);
 						
-						FileToImportInfo fileToImportInfo = null;
 						try {
-							fileToImportInfo = new FileToImportInfo(file);
+							FileToImportInfo fileToImportInfo = new FileToImportInfo(file);
 							FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo);
 							
 							Path targetFolder = Paths.get(pathToImportTo.toString(), fileImportedInfo.getSubfolder());
@@ -76,12 +75,12 @@ public class FileImporter {
 							FileImportedInfo existingFileImportedInfo = null;
 							existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
 							if (existingFileImportedInfo != null) {
-								MyLogger.displayActionMessage(String.format("FileInfo in the database with the same hash and size already exists.", targetPath));
-								MyLogger.displayAndLogActionMessage(String.format("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file));
+								MyLogger.displayActionMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
+								MyLogger.displayAndLogActionMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
 								if (existingFileImportedInfo.getImportEnabled()) {
-									MyLogger.displayAndLogActionMessage(String.format("Reimporting..."));
+									MyLogger.displayAndLogActionMessage("Reimporting...");
 								} else {
-									MyLogger.displayAndLogActionMessage(String.format("Skipping..."));
+									MyLogger.displayAndLogActionMessage("Skipping...");
 									return FileVisitResult.CONTINUE;
 								}
 							}
@@ -93,12 +92,12 @@ public class FileImporter {
 								// But at least a warning should be logged to be able to check later.
 								Path oldTargetPath = targetPath;
 								targetPath = FileUtil.getAlternateFileName(oldTargetPath);
-								MyLogger.displayAndLogActionMessage(String.format("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath));
+								MyLogger.displayAndLogActionMessage("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath);
 								
 								fileImportedInfo.setFileName(targetPath.getFileName().toString());
 							}
 							
-							MyLogger.displayActionMessage(String.format("Copying file from [%s] to [%s]", file, targetPath));
+							MyLogger.displayActionMessage("Copying file from [%s] to [%s]", file, targetPath);
 							if (Files.exists(targetFolder)) {
 								//MyLogger.displayActionMessage(String.format("Target folder already exists [%s].", targetFolder));
 							} else {
@@ -109,12 +108,12 @@ public class FileImporter {
 							
 							// Verification of file copy:
 							if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
-								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath));
+								MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath);
 								return FileVisitResult.CONTINUE;
 							}
 							
 							if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
-								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath));
+								MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath);
 								return FileVisitResult.CONTINUE;
 							}
 							
@@ -122,18 +121,18 @@ public class FileImporter {
 							existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
 							if (existingFileImportedInfo == null) {
 								// TODO: how to retry?
-								MyLogger.displayAndLogActionMessage(String.format("ERROR: error during database insert."));
+								MyLogger.displayAndLogActionMessage("ERROR: error during database insert.");
 								return FileVisitResult.CONTINUE;
 							}
 							
-							MyLogger.displayAndLogActionMessage(String.format("File imported from: [%s] to [%s].", file, targetPath));
+							MyLogger.displayAndLogActionMessage("File imported from: [%s] to [%s].", file, targetPath);
 						} catch (Exception e) {
-							MyLogger.displayAndLogActionMessage(String.format("ERROR: Failed to import file [%s].", file));
+							MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [%s].", file);
 							e.printStackTrace();
 						}
 						
 					} else {
-						MyLogger.displayActionMessage(String.format("Ignoring file because of file type mismatch [%s].", file));
+						MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
 					}
 
 					return FileVisitResult.CONTINUE;
@@ -141,7 +140,7 @@ public class FileImporter {
 
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException e) throws IOException {
-					MyLogger.displayAndLogActionMessage(String.format("ERROR: Failed to import file [%s].Reason: %s", file, e));
+					MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [%s].Reason: %s", file, e);
                     return FileVisitResult.SKIP_SUBTREE;
                 }
 			});

@@ -44,8 +44,7 @@ public class Photons {
 		try {
 			fileImporter.Import();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			MyLogger.displayAndLogException(e);
 		}
 
 		MyLogger.displayActionMessage("Done");
