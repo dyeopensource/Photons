@@ -1,7 +1,6 @@
 package modell;
 
 import java.io.IOException;
-//import java.nio.file.FileVisitOption;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,8 +8,6 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
-
-//import java.util.EnumSet;
 
 import common.FileUtil;
 import common.MyLogger;
@@ -40,8 +37,6 @@ public class FileImporter {
 		MyLogger.displayAndLogActionMessage("Importing files from [%s] to [%s]", this.pathToImportFrom, this.pathToImportTo);
 		this.fileInfoDatabase.openOrCreateDatabase();
 		
-		// Next example with walkFileTree originates from http://docs.oracle.com/javase/7/docs/api/java/nio/file/FileVisitor.html
-		//Files.walkFileTree(this.pathToImportFrom, EnumSet.of(FileVisitOption.FOLLOW_LINKS), Integer.MAX_VALUE,
 		Files.walkFileTree(this.pathToImportFrom,
 			new SimpleFileVisitor<Path>() {
 				@Override
