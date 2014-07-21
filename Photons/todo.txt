@@ -8,8 +8,8 @@ Feature:
 - Import events from google calendar. This contains events on which photos and videos were made. -> Media description/album title candidate.
 	My photo/video calendar:
 		Private:
-			XML: https://www.google.com/calendar/feeds/svc17q0q6lcmbhags47f5kkdus%40group.calendar.google.com/private-0c491ab331be3acf32566b2384058e90/basic
-			ICAL: https://www.google.com/calendar/ical/svc17q0q6lcmbhags47f5kkdus%40group.calendar.google.com/private-0c491ab331be3acf32566b2384058e90/basic.ics
+			XML:	https://www.google.com/calendar/feeds/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic 
+			ICAL:	https://www.google.com/calendar/ical/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic.ics
 
 Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
 Should not be static, default filename should be fileinfo.sqlite
