@@ -98,4 +98,13 @@ public class FileUtil {
 	      fis.close();  
 	      return complete.digest();  
 	} 
+
+	/**
+	 * Checks if a directory exists or not
+	 * @param path The path to the directory
+	 * @return True if the directory exists, false if it does not exist or it is not a directory but a folder
+	 */
+	public static Boolean FolderExists(String path) {
+		return (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)));
+	}
 }
