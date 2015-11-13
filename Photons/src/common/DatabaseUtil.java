@@ -37,6 +37,8 @@ public class DatabaseUtil {
 	}
 	
 	/**
+	 * Checks if SQLite JDBC is present or not.
+	 * If not, logs and exits the application.
 	 * TODO: this method is not tested yet
 	 */
 	public static void CheckSQLite() {

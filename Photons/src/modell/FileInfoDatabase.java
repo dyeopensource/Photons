@@ -20,18 +20,20 @@ public class FileInfoDatabase {
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
 	private static final String versionString = "1.1";
-	private static final String configCreateCommandSql = "CREATE TABLE config " +
+	private static final String configTableName = "config";
+	private static final String configCreateCommandSql = "CREATE TABLE " + configTableName + " " +
 			"(id							INTEGER		PRIMARY KEY, " +
 			"key							TEXT		NOT NULL, " +
 			"value							TEXT		NOT NULL, " +
 			"recordLastModificationTime		INTEGER		NOT NULL, " +
 			"deleted						INTEGER		DEFAULT 0)";
-	private static final String configVersionInsertCommandSql = "INSERT INTO config (key, value, recordLastModificationTime) " +
+	private static final String configVersionInsertCommandSql = "INSERT INTO " + configTableName + " (key, value, recordLastModificationTime) " +
 			"VALUES ('version', '" + versionString + "', %d)";
 	private static final String configVersionSelectCommandSql = "SELECT value, recordLastModificationTime " +
-			"FROM config WHERE key = 'version' ORDER BY value ASC";
+			"FROM " + configTableName + " WHERE key = 'version' ORDER BY value ASC";
 
-	private static final String fileTableCreationCommandSql = "CREATE TABLE fileinfo " +
+	private static final String fileInfoTableName = "fileinfo";
+	private static final String fileTableCreationCommandSql = "CREATE TABLE " + fileInfoTableName + " " +
 			"(id							INTEGER	PRIMARY KEY, " +
 			"originalPath					TEXT	NOT NULL, " +
 			"originalFileName				TEXT	NOT NULL, " +
@@ -45,14 +47,18 @@ public class FileInfoDatabase {
 			"description					TEXT	NOT NULL, " +
 			"recordLastModificationTime		INTEGER	NOT NULL, " +
 			"deleted						INTEGER	DEFAULT 0)";
-	private static final String fileInfoInsertCommandSql = "INSERT INTO fileinfo " +
+	private static final String fileInfoInsertCommandSql = "INSERT INTO " + fileInfoTableName + " " +
 			"(originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
 			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+	
+	/**
+	 * SELECT statement to get records from fileinfo table with the specified original hash and size values 
+	 */
 	private static final String selectFileInfoCommandSql = "SELECT " +
 			"id, originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
-			"FROM fileinfo WHERE originalHash=? AND originalLength=?";
+			"FROM " + fileInfoTableName + " WHERE originalHash=? AND originalLength=?";
 	
 	private Path databaseFolder;
 	private Path databaseFilePath;
@@ -157,10 +163,16 @@ public class FileInfoDatabase {
 		}
 	}
 	
+	/**
+	 * Gets an already imported file info with the specified hash and length.
+	 * @param originalFileContentHash
+	 * @param originalFileLength
+	 * @return An already imported file info with the specified hash and length, or null if not found
+	 */
 	public FileImportedInfo getFileImportedInfo(
-			String importFolderPath,
 			String originalFileContentHash,
-			long originalLength) {
+			long originalFileLength) {
+		
 		DatabaseUtil.CheckSQLite();
 		Connection connection;
 		FileImportedInfo fileImportedInfo = null;
@@ -170,18 +182,21 @@ public class FileInfoDatabase {
 			PreparedStatement preparedQueryStatement = connection.prepareStatement(selectFileInfoCommandSql);
 			
 			preparedQueryStatement.setString(1, originalFileContentHash);
-			preparedQueryStatement.setLong(2, originalLength);
+			preparedQueryStatement.setLong(2, originalFileLength);
 			
 			ResultSet resultSet = preparedQueryStatement.executeQuery();
 			
 			boolean fileImportedInfoWasAlreadyRetrieved = false;
 		    while ( resultSet.next() ) {
 		    	if (fileImportedInfoWasAlreadyRetrieved) {
-		    		// TODO: duplicate element found (same hash and length), what to do now????
+		    		MyLogger.displayAndLogActionMessage("ERROR: Duplicate imported file found. [Hash=%s] [Length=%d] [File=%s]", originalFileContentHash, originalFileLength, fileImportedInfo.getOriginalFileNameWithPath());
+		    		// TODO: duplicate element found (same hash and length), what to do now???? Exit?
 		    	}
+		    	
 		    	fileImportedInfo = FileImportedInfo.getFileImportedInfoFromDatabase(resultSet);
 		    	fileImportedInfoWasAlreadyRetrieved = true;
 		    }
+		    
 		    resultSet.close();
 
 		    preparedQueryStatement.close();

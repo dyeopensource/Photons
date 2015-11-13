@@ -55,9 +55,16 @@ public class FileImporter {
 			});
 		}
 
-	private void visitFile(Path file) {
-		if (!file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
-			MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
+	/**
+	 * Checks if a file is subject for importing (extension fits) and if it should be imported,
+	 * then checks if it was already imported and tries to import / reimport the file if necessary.
+	 *  
+	 * @param file The file checked
+	 */
+	private void visitFile(
+			Path file) {
+		
+		if (!fileShouldBeImported(file)) {
 			return;
 		}
 
@@ -69,8 +76,21 @@ public class FileImporter {
 			Path targetFolder = Paths.get(pathToImportTo.toString(), fileImportedInfo.getSubfolder());
 			Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
+			// TODO: move already imported check to a method / function
+			
+			// Actions here:
+			// Check if the file is already imported.
+			// If there is a record in the database with the same hash and size, it means the file was already imported.
+			// (If there are not only one, but more records with the same hash and size, this shows a bug in the import process.)
+			// If the imported file does not exist, then maybe it should be reimported.
+			// But maybe it was removed intentionally:
+			// In this case the ImportEnabled flag is set to false and the file should not be imported again.
+			// Bit if the flag is true, the file should be copied again.
+			
 			FileImportedInfo existingFileImportedInfo = null;
-			existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+			existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
+					fileImportedInfo.getOriginalHash(),
+					fileImportedInfo.getOriginalLength());
 			if (existingFileImportedInfo != null) {
 				MyLogger.displayActionMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
 				MyLogger.displayAndLogActionMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
@@ -78,6 +98,7 @@ public class FileImporter {
 					MyLogger.displayAndLogActionMessage("Skipping...");
 					return;
 				}
+				
 				MyLogger.displayAndLogActionMessage("Reimporting...");
 			}
 			
@@ -93,34 +114,72 @@ public class FileImporter {
 				fileImportedInfo.setFileName(targetPath.getFileName().toString());
 			}
 			
-			MyLogger.displayActionMessage("Copying file from [%s] to [%s]", file, targetPath);
-			if (!Files.exists(targetFolder)) {
-				Files.createDirectories(targetFolder);
-			}
-			Files.copy(file, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
+			// File copy
+			CopyFileToTargetPathWithVerification(file, fileImportedInfo, targetFolder, targetPath);
 			
-			// Verification of file copy:
-			if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
-				MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath);
-				return;
-			}
-			if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
-				MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath);
-				return;
-			}
-			
+			// Saving file information into database
 			fileInfoDatabase.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
-			FileImportedInfo createdFileImportedInfo = fileInfoDatabase.getFileImportedInfo(pathToImportTo.toString(), fileImportedInfo.getOriginalHash(), fileImportedInfo.getOriginalLength());
+			FileImportedInfo createdFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
+					fileImportedInfo.getOriginalHash(),
+					fileImportedInfo.getOriginalLength());
 			if (createdFileImportedInfo == null) {
 				// TODO: how to retry?
 				MyLogger.displayAndLogActionMessage("ERROR: error during database insert.");
 				return;
 			}
 			
+			// Success
 			MyLogger.displayAndLogActionMessage("File imported from: [%s] to [%s].", file, targetPath);
 		} catch (Exception e) {
 			MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [%s].", file);
 			MyLogger.displayAndLogException(e);
 		}
+	}
+	
+	private Boolean fileShouldBeImported(Path file) {
+		
+		if (!file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
+			MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
+			return false;
+		}
+		
+		return true;
+	}
+	
+	private void CopyFileToTargetPathWithVerification(
+			Path file,
+			FileImportedInfo fileImportedInfo,
+			Path targetFolder,
+			Path targetPath) throws Exception {
+		
+		MyLogger.displayActionMessage("Copying file from [%s] to [%s]", file, targetPath);
+		if (!Files.exists(targetFolder)) {
+			Files.createDirectories(targetFolder);
+		}
+		
+		Files.copy(file, targetPath, StandardCopyOption.COPY_ATTRIBUTES);
+		
+		// Verification of file copy:
+		if (!fileCopySuccess(file, fileImportedInfo, targetPath)) {
+			return;
+		}
+	}
+	
+	private Boolean fileCopySuccess(
+			Path file,
+			FileImportedInfo fileImportedInfo,
+			Path targetPath) throws Exception {
+		
+		if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
+			MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath);
+			return false;
+		}
+		
+		if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
+			MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath);
+			return false;
+		}
+		
+		return true;
 	}
 }

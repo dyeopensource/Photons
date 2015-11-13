@@ -10,6 +10,7 @@ Feature:
 		Private:
 			XML:	https://www.google.com/calendar/feeds/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic 
 			ICAL:	https://www.google.com/calendar/ical/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic.ics
+- files could be assigned to (multiple) events
 
 Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
 Should not be static, default filename should be fileinfo.sqlite

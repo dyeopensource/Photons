@@ -1,5 +1,6 @@
 package modell;
 
+import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Date;
@@ -10,7 +11,11 @@ import common.DatabaseUtil;
 import common.FileUtil;
 import common.MyLogger;
 
-
+/**
+ * Information about an imported file
+ * @author emil
+ *
+ */
 public class FileImportedInfo {
 	private String originalPath;
 	private String originalFileName;
@@ -18,12 +23,9 @@ public class FileImportedInfo {
 	private long originalLength;
 	private String originalHash;
 	
-	// TODO: create field for storing time-zone information
-	// TODO: use it: private MediaFileDate date;
-	
 	private Date originalFileLastModificationTime;
-	private Date mediaContentTimestamp;
-	private Date utcTimestamp;
+	private Date mediaContentTimeStamp;
+	private Date userTimeStamp;
 	
 	private String subFolder;
 	private String fileName;
@@ -39,6 +41,9 @@ public class FileImportedInfo {
 
 	public FileImportedInfo(FileToImportInfo originalFileInfo) {
 		this.id = 0;
+		
+		// TODO: next 2 fields should be moved to another table where we collect all the paths for a file (if found several times)
+		// This is useful for "event" information
 		this.originalPath = originalFileInfo.getPath();
 		this.originalFileName = originalFileInfo.getFileName();
 
@@ -107,6 +112,14 @@ public class FileImportedInfo {
 		this.originalFileName = originalFileName;
 	}
 
+	/**
+	 * Gets the file's original full filename with path
+	 * @return The file's original full filename with path
+	 */
+	public String getOriginalFileNameWithPath() {
+		return Paths.get(this.originalPath,  this.originalFileName).toString();
+	}
+	
 	public long getOriginalLength() {
 		return this.originalLength;
 	}
@@ -195,21 +208,19 @@ public class FileImportedInfo {
 		this.deleted = deleted;
 	}
 
-	
 	public Date getMediaContentTimestamp() {
-		return mediaContentTimestamp;
+		return mediaContentTimeStamp;
 	}
 	
-
 	public void setMediaContentTimestamp(Date mediaContentTimestamp) {
-		this.mediaContentTimestamp = mediaContentTimestamp;
+		this.mediaContentTimeStamp = mediaContentTimestamp;
 	}
 
-	public Date getUtcTimestamp() {
-		return utcTimestamp;
+	public Date getUserTimestamp() {
+		return this.userTimeStamp;
 	}
-
-	public void setUtcTimestamp(Date utcTimestamp) {
-		this.utcTimestamp = utcTimestamp;
+	
+	public void setUserTimestamp(Date userTimeStamp) {
+		this.userTimeStamp = userTimeStamp;
 	}
 }
