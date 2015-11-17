@@ -11,33 +11,42 @@ import java.nio.file.attribute.BasicFileAttributes;
 
 import common.FileUtil;
 import common.MyLogger;
+import ui.Photons;
 
 
 public class FileImporter {
-	// This is the source folder of the images to be imported. All subdirectories will be scanned.
-	private Path pathToImportFrom;
+
+	/**
+	 * This is the source folder of the images to be imported. All subdirectories will be scanned.
+	 */
+	private Path importSourcePath;
 	
-	// The target folder of the import action. Imported files will be stored in the subdirectories of this folder.
-	// The database storing file infos will also be located here
-	private Path pathToImportTo;
+	/**
+	 * The target folder of the import action. Imported files will be stored in the subdirectories of this folder.
+	 * The database storing file infos will also be located here
+	 */
+	private Path importTargetPath;
 	
-	private String fileExtensionToImport;
+	/**
+	 * The lower case file extension which should be used for importing files
+	 */
+	private String fileExtensionToImportLowerCase;
 	
 	private FileInfoDatabase fileInfoDatabase;
 	
 	public FileImporter(String pathToImportFrom, String pathToImportTo, String fileExtensionToImport) {
-		this.pathToImportFrom = Paths.get(pathToImportFrom);
-		this.pathToImportTo = Paths.get(pathToImportTo);
-		this.fileExtensionToImport = fileExtensionToImport;
+		this.importSourcePath = Paths.get(pathToImportFrom);
+		this.importTargetPath = Paths.get(pathToImportTo);
+		this.fileExtensionToImportLowerCase = fileExtensionToImport.toLowerCase();
 		
-		this.fileInfoDatabase = new FileInfoDatabase(this.pathToImportTo);
+		this.fileInfoDatabase = new FileInfoDatabase(this.importTargetPath);
 	}
 	
 	public void Import() throws IOException {
-		MyLogger.displayAndLogActionMessage("Importing files from [%s] to [%s]", this.pathToImportFrom, this.pathToImportTo);
+		MyLogger.displayAndLogActionMessage("Importing files from [%s] to [%s]", this.importSourcePath, this.importTargetPath);
 		this.fileInfoDatabase.openOrCreateDatabase();
 		
-		Files.walkFileTree(this.pathToImportFrom,
+		Files.walkFileTree(this.importSourcePath,
 			new SimpleFileVisitor<Path>() {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
@@ -64,16 +73,20 @@ public class FileImporter {
 	private void visitFile(
 			Path file) {
 		
-		if (!fileShouldBeImported(file)) {
+		if (!fileExtensionFits(file)) {
 			return;
 		}
 
 		MyLogger.displayAndLogActionMessage("Importing file [%s]...", file);
 		try {
+			
+			// Data based on the source file
 			FileToImportInfo fileToImportInfo = new FileToImportInfo(file);
+			
+			// Creating data for database, based on the original file data
 			FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo);
 			
-			Path targetFolder = Paths.get(pathToImportTo.toString(), fileImportedInfo.getSubfolder());
+			Path targetFolder = Paths.get(importTargetPath.toString(), fileImportedInfo.getSubfolder());
 			Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
 			// TODO: move already imported check to a method / function
@@ -86,46 +99,75 @@ public class FileImporter {
 			// But maybe it was removed intentionally:
 			// In this case the ImportEnabled flag is set to false and the file should not be imported again.
 			// Bit if the flag is true, the file should be copied again.
-			
+			Boolean addNewFileInfo = false;
 			FileImportedInfo existingFileImportedInfo = null;
+			// Retrieving imported file info
 			existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
-					fileImportedInfo.getOriginalHash(),
-					fileImportedInfo.getOriginalLength());
+					fileImportedInfo.getHash(),
+					fileImportedInfo.getLength());
+			// Checking if the imported file exists
 			if (existingFileImportedInfo != null) {
+				// File was already imported
 				MyLogger.displayActionMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
-				MyLogger.displayAndLogActionMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(pathToImportTo.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
-				if (!existingFileImportedInfo.getImportEnabled()) {
-					MyLogger.displayAndLogActionMessage("Skipping...");
-					return;
+				MyLogger.displayAndLogActionMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(importTargetPath.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
+				// Checking if imported file exists
+				if (Files.exists(Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString()))) {
+					// Imported file exists: checking if length and hash is correct (sanity check). If not - report an error
+					// TODO: how to handle errors here? Remove existing file from database and import again? Or keep it somehow and only report the problem without exiting?
+					FileToImportInfo existingFileToImportInfo = new FileToImportInfo(targetPath);
+					if (existingFileToImportInfo.getLength() != existingFileImportedInfo.getLength()) {
+						// Length mismatch
+						MyLogger.displayAndLogActionMessage("File length mismatch. Length in database: [%d]. Real file lentgh: [%d].", existingFileImportedInfo.getLength(), existingFileToImportInfo.getLength());
+						System.exit(Photons.errorCodeLengthMismatch);
+					}
+					
+					if (existingFileToImportInfo.getHash() != existingFileImportedInfo.getHash()) {
+						// Hash mismatch
+						MyLogger.displayAndLogActionMessage("File hash mismatch. Hash in database: [%d]. Real file hash: [%d].", existingFileImportedInfo.getHash(), existingFileToImportInfo.getHash());
+						System.exit(Photons.errorCodeHashMismatch);
+					}
+				} else {
+					// Imported file does not exist
+					if (!existingFileImportedInfo.getImportEnabled()) {
+						// ImportEnabled flag is set to false - it was deleted intentionally, no reimport
+						MyLogger.displayAndLogActionMessage("Skipping...");
+						return;
+					}
+					
+					addNewFileInfo = true;
+					MyLogger.displayAndLogActionMessage("Reimporting...");
+				}
+			}
+			
+			if (addNewFileInfo) {
+				if (Files.exists(targetPath)) {
+					// This case can happen. E.g. if the picture was saved and resized to another location with the same name.
+					Path oldTargetPath = targetPath;
+					targetPath = FileUtil.getAlternateFileName(oldTargetPath);
+					MyLogger.displayAndLogActionMessage("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath);
+					
+					fileImportedInfo.setFileName(targetPath.getFileName().toString());
 				}
 				
-				MyLogger.displayAndLogActionMessage("Reimporting...");
+				// File copy
+				CopyFileToTargetPathWithVerification(file, fileImportedInfo, targetFolder, targetPath);
 			}
-			
-			if (Files.exists(targetPath)) {
-				// TODO: maybe length and hash check would be nice here
-				// This case can happen. E.g. if the picture was saved and resized
-				// to another location with the same name.
-				// But at least a warning should be logged to be able to check later.
-				Path oldTargetPath = targetPath;
-				targetPath = FileUtil.getAlternateFileName(oldTargetPath);
-				MyLogger.displayAndLogActionMessage("WARNING: Target file already exists [%s]. Generated new file name: [%s].", oldTargetPath, targetPath);
-				
-				fileImportedInfo.setFileName(targetPath.getFileName().toString());
-			}
-			
-			// File copy
-			CopyFileToTargetPathWithVerification(file, fileImportedInfo, targetFolder, targetPath);
 			
 			// Saving file information into database
-			fileInfoDatabase.saveFileImportedInfo(pathToImportTo.toString(), fileImportedInfo);
-			FileImportedInfo createdFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
-					fileImportedInfo.getOriginalHash(),
-					fileImportedInfo.getOriginalLength());
-			if (createdFileImportedInfo == null) {
-				// TODO: how to retry?
-				MyLogger.displayAndLogActionMessage("ERROR: error during database insert.");
-				return;
+			if (addNewFileInfo) {
+				fileInfoDatabase.addFileImportedInfo(importTargetPath.toString(), fileImportedInfo);
+				
+				// Verifying database insertion
+				FileImportedInfo createdFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
+						fileImportedInfo.getHash(),
+						fileImportedInfo.getLength());
+				if (createdFileImportedInfo == null) {
+					// TODO: how to handle the error?
+					MyLogger.displayAndLogActionMessage("ERROR: error during addition of file info to database.");
+					return;
+				}
+			} else {
+				fileInfoDatabase.addSourcePathInfo(fileToImportInfo, existingFileToImportInfo);
 			}
 			
 			// Success
@@ -136,14 +178,20 @@ public class FileImporter {
 		}
 	}
 	
-	private Boolean fileShouldBeImported(Path file) {
+	/**
+	 * Checks if the file has the expected extension 
+	 * @param file The file to be checked
+	 * @return True if the file has the expected extension (ignoring case), false otherwise
+	 */
+	private Boolean fileExtensionFits(Path file) {
 		
-		if (!file.toString().toLowerCase().endsWith(fileExtensionToImport)) {
+		if (file.toString().toLowerCase().endsWith(fileExtensionToImportLowerCase)) {
+			return true;
+		} else {
 			MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
-			return false;
 		}
-		
-		return true;
+
+		return false;
 	}
 	
 	private void CopyFileToTargetPathWithVerification(
@@ -170,12 +218,12 @@ public class FileImporter {
 			FileImportedInfo fileImportedInfo,
 			Path targetPath) throws Exception {
 		
-		if (fileImportedInfo.getOriginalLength() != Files.size(targetPath)) {
+		if (fileImportedInfo.getLength() != Files.size(targetPath)) {
 			MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File length difference.", file, targetPath);
 			return false;
 		}
 		
-		if (!fileImportedInfo.getOriginalHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
+		if (!fileImportedInfo.getHash().equals(FileUtil.getFileContentHash(targetPath.toString()))) {
 			MyLogger.displayAndLogActionMessage("ERROR: error during copying file from: [%s] to [%s]. File content hash difference.", file, targetPath);
 			return false;
 		}

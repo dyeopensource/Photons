@@ -12,6 +12,12 @@ import common.MyLogger;
 
 public class Photons {
 	
+	public static int errorCodeImportSourceFolderDoesNotExist = 1;
+	public static int errorCodeImportTargetFolderDoesNotExist = 2;
+	public static int errorCodeFailedToCreateLogFile = 3;
+	public static int errorCodeLengthMismatch = 4;
+	public static int errorCodeHashMismatch = 5;
+	
 	private static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyyMMdd-HHmmSS");  
 	
 	/**
@@ -35,12 +41,12 @@ public class Photons {
 
 		if (!FileUtil.FolderExists(sourcePath)) {
 			MyLogger.displayAndLogActionMessage("Import source folder [%s] does not exist. Cannot import.", sourcePath);
-			System.exit(1);
+			System.exit(errorCodeImportSourceFolderDoesNotExist);
 		}
 		
 		if (!FileUtil.FolderExists(destinationPath)) {
 			MyLogger.displayAndLogActionMessage("Import target folder [%s] does not exist. Cannot import.", destinationPath);
-			System.exit(2);
+			System.exit(errorCodeImportTargetFolderDoesNotExist);
 		}
 		
 		final Path logPath = Paths.get(destinationPath, String.format("actions_%s.txt", dateTimeFormatter.format(new Date())));
@@ -49,7 +55,7 @@ public class Photons {
 		} catch (IOException e) {
 			System.err.println(String.format("Could not create logfile '%s'.", logPath));
 			e.printStackTrace();
-			System.exit(3);
+			System.exit(errorCodeFailedToCreateLogFile);
 		}
 		
 		FileImporter fileImporter = new FileImporter(sourcePath, destinationPath, type);

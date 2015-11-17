@@ -91,7 +91,7 @@ public class FileToImportInfo {
 	 * @return	The String containing the hash calculated from the content of the file. (SHA-256)
 	 */
 	public String getHash() {
-		return hash;
+		return this.hash;
 	}
 
 	/**

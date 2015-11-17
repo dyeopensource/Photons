@@ -1,5 +1,6 @@
 package modell;
 
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -20,10 +21,10 @@ public class FileImportedInfo {
 	private String originalPath;
 	private String originalFileName;
 	
-	private long originalLength;
-	private String originalHash;
+	private long length;
+	private String hash;
 	
-	private Date originalFileLastModificationTime;
+	private Date fileLastModificationTime;
 	private Date mediaContentTimeStamp;
 	private Date userTimeStamp;
 	
@@ -47,10 +48,10 @@ public class FileImportedInfo {
 		this.originalPath = originalFileInfo.getPath();
 		this.originalFileName = originalFileInfo.getFileName();
 
-		this.originalLength = originalFileInfo.getLength();
-		this.originalHash = originalFileInfo.getHash();
-		this.originalFileLastModificationTime = originalFileInfo.getLastModificationTime();
-		this.subFolder = FileUtil.subfolderDateFormatter.format(this.originalFileLastModificationTime);
+		this.length = originalFileInfo.getLength();
+		this.hash = originalFileInfo.getHash();
+		this.fileLastModificationTime = originalFileInfo.getLastModificationTime();
+		this.subFolder = FileUtil.subfolderDateFormatter.format(this.fileLastModificationTime);
 		this.fileName = originalFileInfo.getFileName();
 		
 		this.importEnabled = false;
@@ -77,9 +78,9 @@ public class FileImportedInfo {
 			fileImportedInfo.setId(resultSet.getLong("id"));
 			fileImportedInfo.setOriginalPath(resultSet.getString("originalPath"));
 			fileImportedInfo.setOriginalFileName(resultSet.getString("originalFileName"));
-			fileImportedInfo.setOriginalLength(resultSet.getLong("originalLength"));
-			fileImportedInfo.setOriginalHash(resultSet.getString("originalHash"));
-			fileImportedInfo.setOriginalLastModificationTime(new Date(resultSet.getLong("originalLastModificationTime")));
+			fileImportedInfo.setLength(resultSet.getLong("originalLength"));
+			fileImportedInfo.setHash(resultSet.getString("originalHash"));
+			fileImportedInfo.setLastModificationTime(new Date(resultSet.getLong("originalLastModificationTime")));
 			fileImportedInfo.setSubfolder(resultSet.getString("subFolder"));
 			fileImportedInfo.setFileName(resultSet.getString("fileName"));
 			fileImportedInfo.setImportEnabled(DatabaseUtil.getBooleanFromStringValue(resultSet.getString("importEnabled")));
@@ -96,8 +97,12 @@ public class FileImportedInfo {
 		return fileImportedInfo;
 	}
 
+	public Path getCurrentRelativePathWithFileName() {
+		return Paths.get(this.subFolder,  this.fileName);
+	}
+	
 	public String getOriginalPath() {
-		return originalPath;
+		return this.originalPath;
 	}
 
 	private void setOriginalPath(String originalPath) {
@@ -105,7 +110,7 @@ public class FileImportedInfo {
 	}
 
 	public String getOriginalFileName() {
-		return originalFileName;
+		return this.originalFileName;
 	}
 
 	private void setOriginalFileName(String originalFileName) {
@@ -120,32 +125,32 @@ public class FileImportedInfo {
 		return Paths.get(this.originalPath,  this.originalFileName).toString();
 	}
 	
-	public long getOriginalLength() {
-		return this.originalLength;
+	public long getLength() {
+		return this.length;
 	}
 	
-	private void setOriginalLength(long originalLength) {
-		this.originalLength = originalLength;
+	private void setLength(long length) {
+		this.length = length;
 	}
 
-	public String getOriginalHash() {
-		return originalHash;
+	public String getHash() {
+		return this.hash;
 	}
 
-	private void setOriginalHash(String originalHash) {
-		this.originalHash = originalHash;
+	private void setHash(String hash) {
+		this.hash = hash;
 	}
 
-	public Date getOriginalLastModificationTime() {
-		return originalFileLastModificationTime;
+	public Date getLastModificationTime() {
+		return fileLastModificationTime;
 	}
 
-	private void setOriginalLastModificationTime(Date originalLastModificationTime) {
-		this.originalFileLastModificationTime = originalLastModificationTime;
+	private void setLastModificationTime(Date lastModificationTime) {
+		this.fileLastModificationTime = lastModificationTime;
 	}
 
 	public String getSubfolder() {
-		return subFolder;
+		return this.subFolder;
 	}
 
 	public void setSubfolder(String subFolder) {
@@ -153,7 +158,7 @@ public class FileImportedInfo {
 	}
 
 	public Boolean getImportEnabled() {
-		return importEnabled;
+		return this.importEnabled;
 	}
 
 	public void setImportEnabled(Boolean importEnabled) {
@@ -161,7 +166,7 @@ public class FileImportedInfo {
 	}
 
 	public int getType() {
-		return type;
+		return this.type;
 	}
 
 	private void setType(int type) {
@@ -177,7 +182,7 @@ public class FileImportedInfo {
 	}
 
 	public String getDescription() {
-		return description;
+		return this.description;
 	}
 
 	public void setDescription(String description) {

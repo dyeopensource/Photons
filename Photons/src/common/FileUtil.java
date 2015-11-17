@@ -33,8 +33,7 @@ public class FileUtil {
 	}
 
 	/**
-	 * If the target file already exists, generates an alternate filename with a sequence number
-	 * appended at the end of the filename.
+	 * If the target file already exists, generates an alternate filename with a sequence number appended at the end of the filename.
 	 * @param originalTargetPath	The full path and filename of the original file
 	 * @return						A filename with full path which does not exist, but is in the same folder as the original
 	 */
@@ -60,10 +59,10 @@ public class FileUtil {
 	}
 	
 	/**
-	 * TODO: document
-	 * @param fileName
-	 * @param algo
-	 * @return
+	 * Gets the checksum as string of the content of the file by the specified algorithm
+	 * @param fileName The filename with path of the file for which the content checksum is calculated
+	 * @param algo The name of the algorithm which is used for calculating the checksum
+	 * @return The calculated checksum as hexadecimal string
 	 * @throws Exception
 	 * @link Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html
 	 */
@@ -77,10 +76,10 @@ public class FileUtil {
 	}
 	
 	/**
-	 * TODO: document
-	 * @param fileName
-	 * @param algo
-	 * @return
+	 * Gets the checksum of the content of the file by the specified algorithm
+	 * @param fileName The filename with path of the file for which the content checksum is calculated 
+	 * @param algo The name of the algorithm which is used for calculating the checksum
+	 * @return The calculated checksum
 	 * @throws Exception
 	 * @link Source: http://techiejoms.blogspot.hu/2013/06/getting-checksum-or-hash-value-of-file.html
 	 */

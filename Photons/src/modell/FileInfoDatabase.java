@@ -19,7 +19,7 @@ public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionString = "1.1";
+	private static final String versionString = "2.0";
 	private static final String configTableName = "config";
 	private static final String configCreateCommandSql = "CREATE TABLE " + configTableName + " " +
 			"(id							INTEGER		PRIMARY KEY, " +
@@ -79,6 +79,9 @@ public class FileInfoDatabase {
 		this.connectionString = String.format("jdbc:sqlite:%s", this.databaseFilePath);
 	}
 	
+	/**
+	 * Opens or creates the database for file import - does version check if already exists
+	 */
 	public void openOrCreateDatabase() {
 	    try {
 			DatabaseUtil.CheckSQLite();
@@ -100,14 +103,12 @@ public class FileInfoDatabase {
 				resultSet.close();
 				queryStatement.close();
 
-				if (version.equals("1.0")) {
-					throw new Exception(String.format("Unsupported outdated database version: [%s].", version));
-				}
-				else if (version.equals(versionString)) {
+				if (version.equals(versionString)) {
 					// OK
-					MyLogger.displayAndLogActionMessage("Database already exists with expected version: [%s].", version);
+					MyLogger.displayAndLogActionMessage("Database already exists with expected version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder);
 				} else {
-					throw new Exception(String.format("Unsupported database version: [%s].", version));
+					MyLogger.displayAndLogActionMessage(String.format("Unsupported database version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder));
+					System.exit(4);
 				}
 			} catch ( Exception e ) {
 				MyLogger.displayException(e);
@@ -121,14 +122,20 @@ public class FileInfoDatabase {
 	
 				MyLogger.displayAndLogActionMessage("Created database successfully");
 			}
+			
 		    connection.close();
 	    } catch ( Exception e ) {
 	    	MyLogger.displayAndLogException(e);
-	    	System.exit(0);
+	    	System.exit(5);
 	    }
 	}
 
-	public void saveFileImportedInfo(String importFolderPath, FileImportedInfo fileInfo) {
+	/**
+	 * Inserts a new file record into the database
+	 * @param importTargetPath The target folder where the file was copied 
+	 * @param fileInfo The object containing data to be inserted into the database
+	 */
+	public void addFileImportedInfo(String importTargetPath, FileImportedInfo fileInfo) {
 		DatabaseUtil.CheckSQLite();
 		Connection connection;
 		try {
@@ -140,9 +147,9 @@ public class FileInfoDatabase {
 			
 			preparedInsertStatement.setString(1, fileInfo.getOriginalPath());
 			preparedInsertStatement.setString(2, fileInfo.getOriginalFileName());
-			preparedInsertStatement.setLong(3, fileInfo.getOriginalLength());
-			preparedInsertStatement.setString(4, fileInfo.getOriginalHash());
-			preparedInsertStatement.setLong(5, fileInfo.getOriginalLastModificationTime().getTime());
+			preparedInsertStatement.setLong(3, fileInfo.getLength());
+			preparedInsertStatement.setString(4, fileInfo.getHash());
+			preparedInsertStatement.setLong(5, fileInfo.getLastModificationTime().getTime());
 			preparedInsertStatement.setString(6, fileInfo.getSubfolder());
 			preparedInsertStatement.setString(7, fileInfo.getFileName());
 			preparedInsertStatement.setString(8, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
