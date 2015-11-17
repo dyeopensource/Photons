@@ -19,7 +19,8 @@ public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionString = "2.0";
+	private static final String versionString = "2.1";
+	
 	private static final String configTableName = "config";
 	private static final String configCreateCommandSql = "CREATE TABLE " + configTableName + " " +
 			"(id							INTEGER		PRIMARY KEY, " +
@@ -33,10 +34,9 @@ public class FileInfoDatabase {
 			"FROM " + configTableName + " WHERE key = 'version' ORDER BY value ASC";
 
 	private static final String fileInfoTableName = "fileinfo";
-	private static final String fileTableCreationCommandSql = "CREATE TABLE " + fileInfoTableName + " " +
+	private static final String fileInfoTableCreationCommandSql = "CREATE TABLE " + fileInfoTableName + " " +
 			"(id							INTEGER	PRIMARY KEY, " +
-			"originalPath					TEXT	NOT NULL, " +
-			"originalFileName				TEXT	NOT NULL, " +
+			"originalFileNameWithPath		TEXT	NOT NULL, " +
 			"originalLength					INTEGER	NOT NULL, " +
 			"originalHash					TEXT	NOT NULL, " +
 			"originalLastModificationTime	INTEGER	NOT NULL, " +
@@ -48,17 +48,30 @@ public class FileInfoDatabase {
 			"recordLastModificationTime		INTEGER	NOT NULL, " +
 			"deleted						INTEGER	DEFAULT 0)";
 	private static final String fileInfoInsertCommandSql = "INSERT INTO " + fileInfoTableName + " " +
-			"(originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
+			"(originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	/**
 	 * SELECT statement to get records from fileinfo table with the specified original hash and size values 
 	 */
 	private static final String selectFileInfoCommandSql = "SELECT " +
-			"id, originalPath, originalFileName, originalLength, originalHash, originalLastModificationTime, " +
+			"id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
 			"FROM " + fileInfoTableName + " WHERE originalHash=? AND originalLength=?";
+
+	private static final String fileGroupTableName = "filegroup";
+	private static final String fileGroupTableCreationCommandSql = "CREATE TABLE " + fileGroupTableName + " " +
+			"(id							INTEGER	PRIMARY KEY, " +
+			"description					TEXT	NOT NULL, " +
+			"recordLastModificationTime		INTEGER	NOT NULL, " +
+			"deleted						INTEGER	DEFAULT 0)";
+	private static final String fileGroupInsertCommandSql = "INSERT INTO " + fileGroupTableName + " " +
+			"(description, recordLastModificationTime) " +
+			"VALUES (?, ?)";
+	private static final String selectFileGroupCommandSql = "SELECT " +
+			"id, description, recordLastModificationTime, deleted " +
+			"FROM " + fileGroupTableName + " WHERE description=?";
 	
 	private Path databaseFolder;
 	private Path databaseFilePath;
@@ -116,7 +129,8 @@ public class FileInfoDatabase {
 				Statement updateStatement = connection.createStatement();
 				updateStatement.executeUpdate(configCreateCommandSql);
 				updateStatement.executeUpdate(String.format(configVersionInsertCommandSql, DatabaseUtil.getLongTimeStampCurrent()));
-				updateStatement.executeUpdate(fileTableCreationCommandSql);
+				updateStatement.executeUpdate(fileInfoTableCreationCommandSql);
+				updateStatement.executeUpdate(fileGroupTableCreationCommandSql);
 			      
 				updateStatement.close();
 	
@@ -141,32 +155,72 @@ public class FileInfoDatabase {
 		try {
 			connection = DriverManager.getConnection(this.connectionString);
 			
-			//connection.setAutoCommit(false); If running multiple actions in a transaction
+			connection.setAutoCommit(false); // If running multiple actions in a transaction
 			
-			PreparedStatement preparedInsertStatement = connection.prepareStatement(fileInfoInsertCommandSql);
+			PreparedStatement preparedInsertFileInfoStatement = connection.prepareStatement(fileInfoInsertCommandSql);
 			
-			preparedInsertStatement.setString(1, fileInfo.getOriginalPath());
-			preparedInsertStatement.setString(2, fileInfo.getOriginalFileName());
-			preparedInsertStatement.setLong(3, fileInfo.getLength());
-			preparedInsertStatement.setString(4, fileInfo.getHash());
-			preparedInsertStatement.setLong(5, fileInfo.getLastModificationTime().getTime());
-			preparedInsertStatement.setString(6, fileInfo.getSubfolder());
-			preparedInsertStatement.setString(7, fileInfo.getFileName());
-			preparedInsertStatement.setString(8, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
-			preparedInsertStatement.setInt(9, fileInfo.getType());
-			preparedInsertStatement.setString(10, fileInfo.getDescription());
-			preparedInsertStatement.setLong(11, new Date().getTime());
+			preparedInsertFileInfoStatement.setString(1, fileInfo.getOriginalFileNameWithPath());
+			preparedInsertFileInfoStatement.setLong(2, fileInfo.getLength());
+			preparedInsertFileInfoStatement.setString(3, fileInfo.getHash());
+			preparedInsertFileInfoStatement.setLong(4, fileInfo.getLastModificationTime().getTime());
+			preparedInsertFileInfoStatement.setString(5, fileInfo.getSubfolder());
+			preparedInsertFileInfoStatement.setString(6, fileInfo.getFileName());
+			preparedInsertFileInfoStatement.setString(7, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
+			preparedInsertFileInfoStatement.setInt(8, fileInfo.getType());
+			preparedInsertFileInfoStatement.setString(9, fileInfo.getDescription());
+			preparedInsertFileInfoStatement.setLong(10, new Date().getTime());
 			
-			preparedInsertStatement.executeUpdate();
+			if (preparedInsertFileInfoStatement.executeUpdate() != 1) {
+				// TODO: error handling: failed to insert record
+			}
 			
-			preparedInsertStatement.close();
+			preparedInsertFileInfoStatement.close();
+
+			// TODO: note that fileInfo has no ID yet - it should be queried after insertion
+			storeFileGroupInformation(connection, fileInfo);
 			
-			//connection.commit(); If a transaction is necessary
+			connection.commit(); // If a transaction is necessary
 			
 			connection.close();
 		} catch (SQLException e) {
 			MyLogger.displayAndLogException(e);
-			System.exit(0);
+			System.exit(0); // TODO: use predefinded exit codes
+		}
+	}
+	
+	private void storeFileGroupInformation(Connection connection, FileImportedInfo fileInfo) throws SQLException {
+		// TODO: implement
+		
+		// TODO: File group information storage could be moved to a separate method
+		// Steps:
+		// 1. Check if group already exists; If not, insert new.
+		// 2. Insert association of file with group.
+		PreparedStatement preparedInsertFileGroupStatement = connection.prepareStatement(fileGroupInsertCommandSql);
+		
+		preparedInsertFileGroupStatement.setString(1, fileInfo.getFilePath());
+		preparedInsertFileGroupStatement.setLong(2, new Date().getTime());
+		
+		preparedInsertFileGroupStatement.executeUpdate();
+		
+		preparedInsertFileGroupStatement.close();
+	}
+	
+	public void addSourcePathInfo(FileToImportInfo fileToImportInfo, FileToImportInfo existingFileToImportInfo) {
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection(this.connectionString);
+			
+			connection.setAutoCommit(false); // If running multiple actions in a transaction
+			
+			// TODO: implement
+			storeFileGroupInformation(connection, );
+			
+			connection.commit(); // If a transaction is necessary
+			
+			connection.close();
+		} catch (SQLException e) {
+			MyLogger.displayAndLogException(e);
+			System.exit(0); // TODO: use predefinded exit codes
 		}
 	}
 	

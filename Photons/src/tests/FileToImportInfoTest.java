@@ -73,7 +73,7 @@ public class FileToImportInfoTest {
 	 */
 	@Test
 	public final void testFileToImportInfoPath_existingFile_succeeds() throws Exception {
-		FileToImportInfo fileToImportInfo = new FileToImportInfo(Paths.get(".", testDataFolderPathString, testFileName));
+		FileToImportInfo fileToImportInfo = new FileToImportInfo(Paths.get(".", testDataFolderPathString, this.testFileName));
 		TestGetters(fileToImportInfo);
 	}
 
@@ -95,20 +95,20 @@ public class FileToImportInfoTest {
 	 */
 	@Test
 	public final void testFileToImportInfoStringString_existingFile_succeeds() throws Exception {
-		FileToImportInfo fileToImportInfo = new FileToImportInfo(Paths.get(".", testDataFolderPathString).toString(), testFileName);
+		FileToImportInfo fileToImportInfo = new FileToImportInfo(Paths.get(".", testDataFolderPathString).toString(), this.testFileName);
 		TestGetters(fileToImportInfo);
 	}
 
 	private void TestGetters(FileToImportInfo fileToImportInfo) throws IOException {
-		String pathString = fileToImportInfo.getPath();
-		String referencePathString = Paths.get(Paths.get("").toString(), testDataFolderPathString).toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
-		if (!pathString.equals(referencePathString)) {
-			fail(String.format("Wrong path: [%s]. Should be [%s].", pathString, referencePathString));
+		String fileNameWithPathString = fileToImportInfo.getFileNameWithPath();
+		String referenceFileNameWithPathString = Paths.get(Paths.get("").toString(), testDataFolderPathString, this.testFileName).toRealPath(LinkOption.NOFOLLOW_LINKS).toString();
+		if (!fileNameWithPathString.equals(referenceFileNameWithPathString)) {
+			fail(String.format("Wrong path: [%s]. Should be [%s].", fileNameWithPathString, referenceFileNameWithPathString));
 		}
 
 		String fileName = fileToImportInfo.getFileName();
-		if (!fileName.equals(testFileName)) {
-			fail(String.format("Wrong fileName: [%s]. Should be [%s].", fileName, testFileName));
+		if (!fileName.equals(this.testFileName)) {
+			fail(String.format("Wrong fileName: [%s]. Should be [%s].", fileName, this.testFileName));
 		}
 		
 		long length = fileToImportInfo.getLength();

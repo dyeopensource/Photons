@@ -18,8 +18,9 @@ import common.MyLogger;
  *
  */
 public class FileImportedInfo {
-	private String originalPath;
-	private String originalFileName;
+	
+	private String originalFileNameWithPath;
+	private String originalFilePath;
 	
 	private long length;
 	private String hash;
@@ -43,10 +44,8 @@ public class FileImportedInfo {
 	public FileImportedInfo(FileToImportInfo originalFileInfo) {
 		this.id = 0;
 		
-		// TODO: next 2 fields should be moved to another table where we collect all the paths for a file (if found several times)
-		// This is useful for "event" information
-		this.originalPath = originalFileInfo.getPath();
-		this.originalFileName = originalFileInfo.getFileName();
+		this.originalFileNameWithPath = originalFileInfo.getFileNameWithPath();
+		this.originalFilePath = originalFileInfo.getFilePath();
 
 		this.length = originalFileInfo.getLength();
 		this.hash = originalFileInfo.getHash();
@@ -56,7 +55,7 @@ public class FileImportedInfo {
 		
 		this.importEnabled = false;
 		
-		if (this.originalFileName.toLowerCase().endsWith(".jpg")) {
+		if (this.originalFileNameWithPath.toLowerCase().endsWith(".jpg")) {
 			this.type = 1;
 		}
 		else {
@@ -76,8 +75,7 @@ public class FileImportedInfo {
 		FileImportedInfo fileImportedInfo = new FileImportedInfo();
 		try {
 			fileImportedInfo.setId(resultSet.getLong("id"));
-			fileImportedInfo.setOriginalPath(resultSet.getString("originalPath"));
-			fileImportedInfo.setOriginalFileName(resultSet.getString("originalFileName"));
+			fileImportedInfo.setOriginalFileNameWithPath(resultSet.getString("originalFileNameWithPath"));
 			fileImportedInfo.setLength(resultSet.getLong("originalLength"));
 			fileImportedInfo.setHash(resultSet.getString("originalHash"));
 			fileImportedInfo.setLastModificationTime(new Date(resultSet.getLong("originalLastModificationTime")));
@@ -100,31 +98,23 @@ public class FileImportedInfo {
 	public Path getCurrentRelativePathWithFileName() {
 		return Paths.get(this.subFolder,  this.fileName);
 	}
-	
-	public String getOriginalPath() {
-		return this.originalPath;
-	}
-
-	private void setOriginalPath(String originalPath) {
-		this.originalPath = originalPath;
-	}
-
-	public String getOriginalFileName() {
-		return this.originalFileName;
-	}
-
-	private void setOriginalFileName(String originalFileName) {
-		this.originalFileName = originalFileName;
-	}
 
 	/**
 	 * Gets the file's original full filename with path
 	 * @return The file's original full filename with path
 	 */
 	public String getOriginalFileNameWithPath() {
-		return Paths.get(this.originalPath,  this.originalFileName).toString();
+		return this.originalFileNameWithPath;
+	}
+
+	public String getFilePath() {
+		return this.originalFilePath;
 	}
 	
+	public void setOriginalFileNameWithPath(String originalFileName) {
+		this.originalFileNameWithPath = originalFileName;
+	}
+
 	public long getLength() {
 		return this.length;
 	}

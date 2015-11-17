@@ -15,9 +15,8 @@ import common.FileUtil;
  */
 public class FileToImportInfo {
 	
-	private String path;
 	private String fileName;
-	
+	private String filePath;
 	private String fileNameWithPath;
 	
 	private long length;
@@ -31,6 +30,7 @@ public class FileToImportInfo {
 	 */
 	public FileToImportInfo(Path path) throws Exception {
 		Path realPath = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
+		this.filePath = realPath.getParent().toString();
 		setFileData(realPath);
 	}
 	
@@ -51,9 +51,8 @@ public class FileToImportInfo {
 	 * @throws Exception
 	 */
 	private void setFileData(Path realPath) throws Exception {
-		this.path = realPath.getParent().toString();
-		this.fileName = realPath.getFileName().toString();
 		this.fileNameWithPath = realPath.toString();
+		this.fileName = realPath.getFileName().toString();
 
 		File thisFile = new File(this.fileNameWithPath);
 		
@@ -63,21 +62,29 @@ public class FileToImportInfo {
 	}
 
 	/**
-	 * Gets the path to the file.
-	 * @return	The String containing the path to the file.
-	 */
-	public String getPath() {
-		return path;
-	}
-
-	/**
 	 * Gets the name of the file.
 	 * @return	The String containing the name of the file.
 	 */
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
+	/**
+	 * Gets the name of the file with full path
+	 * @return	The String containing the name of the file with full path
+	 */
+	public String getFileNameWithPath() {
+		return this.fileNameWithPath;
+	}
+
+	/**
+	 * Gets the path of the file
+	 * @return The String containing the full path of the file
+	 */
+	public String getFilePath() {
+		return this.filePath;
+	}
+	
 	/**
 	 * Gets the length of the file in bytes.
 	 * @return	The length of the file in bytes
@@ -99,6 +106,6 @@ public class FileToImportInfo {
 	 * @return	Date of the last modification time of the file.
 	 */
 	public Date getLastModificationTime() {
-		return lastModificationTime;
+		return this.lastModificationTime;
 	}
 }
