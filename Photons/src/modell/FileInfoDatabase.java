@@ -13,33 +13,39 @@ import java.util.Date;
 
 import common.DatabaseUtil;
 import common.MyLogger;
+import ui.Photons;
 
 
 public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionString = "2.1";
+	private static final String versionString = "2.3";
+	
+	private static final String fieldNameId = "id";
 	
 	private static final String configTableName = "config";
+	private static final String configTableFieldNameValue = "value";
 	private static final String configCreateCommandSql = "CREATE TABLE " + configTableName + " " +
-			"(id							INTEGER		PRIMARY KEY, " +
+			"(" + fieldNameId + "			INTEGER		PRIMARY KEY, " +
 			"key							TEXT		NOT NULL, " +
-			"value							TEXT		NOT NULL, " +
+			configTableFieldNameValue + "	TEXT		NOT NULL, " +
 			"recordLastModificationTime		INTEGER		NOT NULL, " +
 			"deleted						INTEGER		DEFAULT 0)";
-	private static final String configVersionInsertCommandSql = "INSERT INTO " + configTableName + " (key, value, recordLastModificationTime) " +
+	private static final String configVersionInsertCommandSql = "INSERT INTO " + configTableName + " (key, " + configTableFieldNameValue + ", recordLastModificationTime) " +
 			"VALUES ('version', '" + versionString + "', %d)";
-	private static final String configVersionSelectCommandSql = "SELECT value, recordLastModificationTime " +
+	private static final String configVersionSelectCommandSql = "SELECT " + configTableFieldNameValue + ", recordLastModificationTime " +
 			"FROM " + configTableName + " WHERE key = 'version' ORDER BY value ASC";
 
 	private static final String fileInfoTableName = "fileinfo";
 	private static final String fileInfoTableCreationCommandSql = "CREATE TABLE " + fileInfoTableName + " " +
-			"(id							INTEGER	PRIMARY KEY, " +
+			"(" + fieldNameId + "			INTEGER	PRIMARY KEY, " +
 			"originalFileNameWithPath		TEXT	NOT NULL, " +
 			"originalLength					INTEGER	NOT NULL, " +
 			"originalHash					TEXT	NOT NULL, " +
 			"originalLastModificationTime	INTEGER	NOT NULL, " +
+			"mediaContentTimeStamp			INTEGER	NOT NULL, " +
+			"userTimeStamp					INTEGER	NOT NULL, " +
 			"subFolder						TEXT	NOT NULL, " +
 			"fileName						TEXT	NOT NULL, " +
 			"importEnabled					INTEGER	NOT NULL, " +
@@ -49,29 +55,46 @@ public class FileInfoDatabase {
 			"deleted						INTEGER	DEFAULT 0)";
 	private static final String fileInfoInsertCommandSql = "INSERT INTO " + fileInfoTableName + " " +
 			"(originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
+			"mediaContentTimeStamp, userTimeStamp, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	/**
 	 * SELECT statement to get records from fileinfo table with the specified original hash and size values 
 	 */
 	private static final String selectFileInfoCommandSql = "SELECT " +
-			"id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
+			fieldNameId + ", originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
+			"mediaContentTimeStamp, userTimeStamp, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
 			"FROM " + fileInfoTableName + " WHERE originalHash=? AND originalLength=?";
 
 	private static final String fileGroupTableName = "filegroup";
+	private static final String fileGroupTableFieldNameDescription = "description";
 	private static final String fileGroupTableCreationCommandSql = "CREATE TABLE " + fileGroupTableName + " " +
-			"(id							INTEGER	PRIMARY KEY, " +
-			"description					TEXT	NOT NULL, " +
-			"recordLastModificationTime		INTEGER	NOT NULL, " +
-			"deleted						INTEGER	DEFAULT 0)";
+			"(" + fieldNameId + "					INTEGER	PRIMARY KEY, " +
+			fileGroupTableFieldNameDescription + "	TEXT	NOT NULL, " +
+			"recordLastModificationTime				INTEGER	NOT NULL, " +
+			"deleted								INTEGER	DEFAULT 0)";
 	private static final String fileGroupInsertCommandSql = "INSERT INTO " + fileGroupTableName + " " +
-			"(description, recordLastModificationTime) " +
+			"(" + fileGroupTableFieldNameDescription + ", recordLastModificationTime) " +
 			"VALUES (?, ?)";
 	private static final String selectFileGroupCommandSql = "SELECT " +
-			"id, description, recordLastModificationTime, deleted " +
+			fieldNameId + ", " + fileGroupTableFieldNameDescription + ", recordLastModificationTime, deleted " +
 			"FROM " + fileGroupTableName + " WHERE description=?";
+
+	private static final String fileGroupAssignmentTableName = "filegroupassignment";
+	private static final String fileGroupAssignmentTableCreationCommandSql = "CREATE TABLE " + fileGroupAssignmentTableName + " " +
+			"(" + fieldNameId + "			INTEGER	PRIMARY KEY, " +
+			"groupid						INTEGER	NOT NULL, " +
+			"fileid							INTEGER	NOT NULL, " +
+			"recordLastModificationTime		INTEGER	NOT NULL, " +
+			"deleted						INTEGER	DEFAULT 0)";
+	private static final String fileGroupAssignmentInsertCommandSql = "INSERT INTO " + fileGroupAssignmentTableName + " " +
+			"(groupid, fileid, recordLastModificationTime) " +
+			"VALUES (?, ?, ?)";
+	private static final String selectFileGroupAssignmentCommandSql = "SELECT " +
+			fieldNameId + ", groupid, fileid, recordLastModificationTime, deleted " +
+			"FROM " + fileGroupAssignmentTableName + " WHERE groupid=? AND fileid=?";
 	
 	private Path databaseFolder;
 	private Path databaseFilePath;
@@ -111,7 +134,7 @@ public class FileInfoDatabase {
 				Statement queryStatement = connection.createStatement();
 				ResultSet resultSet = queryStatement.executeQuery(configVersionSelectCommandSql);
 				while ( resultSet.next() ) {
-					version = resultSet.getString("value");
+					version = resultSet.getString(configTableFieldNameValue);
 				}
 				resultSet.close();
 				queryStatement.close();
@@ -121,7 +144,7 @@ public class FileInfoDatabase {
 					MyLogger.displayAndLogActionMessage("Database already exists with expected version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder);
 				} else {
 					MyLogger.displayAndLogActionMessage(String.format("Unsupported database version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder));
-					System.exit(4);
+					System.exit(Photons.errorCodeUnsupportedDatabaseVersion);
 				}
 			} catch ( Exception e ) {
 				MyLogger.displayException(e);
@@ -131,6 +154,7 @@ public class FileInfoDatabase {
 				updateStatement.executeUpdate(String.format(configVersionInsertCommandSql, DatabaseUtil.getLongTimeStampCurrent()));
 				updateStatement.executeUpdate(fileInfoTableCreationCommandSql);
 				updateStatement.executeUpdate(fileGroupTableCreationCommandSql);
+				updateStatement.executeUpdate(fileGroupAssignmentTableCreationCommandSql);
 			      
 				updateStatement.close();
 	
@@ -155,7 +179,7 @@ public class FileInfoDatabase {
 		try {
 			connection = DriverManager.getConnection(this.connectionString);
 			
-			connection.setAutoCommit(false); // If running multiple actions in a transaction
+			//connection.setAutoCommit(false); // If running multiple actions in a transaction
 			
 			PreparedStatement preparedInsertFileInfoStatement = connection.prepareStatement(fileInfoInsertCommandSql);
 			
@@ -163,64 +187,131 @@ public class FileInfoDatabase {
 			preparedInsertFileInfoStatement.setLong(2, fileInfo.getLength());
 			preparedInsertFileInfoStatement.setString(3, fileInfo.getHash());
 			preparedInsertFileInfoStatement.setLong(4, fileInfo.getLastModificationTime().getTime());
-			preparedInsertFileInfoStatement.setString(5, fileInfo.getSubfolder());
-			preparedInsertFileInfoStatement.setString(6, fileInfo.getFileName());
-			preparedInsertFileInfoStatement.setString(7, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
-			preparedInsertFileInfoStatement.setInt(8, fileInfo.getType());
-			preparedInsertFileInfoStatement.setString(9, fileInfo.getDescription());
-			preparedInsertFileInfoStatement.setLong(10, new Date().getTime());
+			preparedInsertFileInfoStatement.setLong(5, fileInfo.getMediaContentTimestamp().getTime());
+			preparedInsertFileInfoStatement.setLong(6, fileInfo.getUserTimestamp().getTime());
+			preparedInsertFileInfoStatement.setString(7, fileInfo.getSubfolder());
+			preparedInsertFileInfoStatement.setString(8, fileInfo.getFileName());
+			preparedInsertFileInfoStatement.setString(9, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
+			preparedInsertFileInfoStatement.setInt(10, fileInfo.getType());
+			preparedInsertFileInfoStatement.setString(11, fileInfo.getDescription());
+			preparedInsertFileInfoStatement.setLong(12, new Date().getTime());
 			
 			if (preparedInsertFileInfoStatement.executeUpdate() != 1) {
-				// TODO: error handling: failed to insert record
+				MyLogger.displayAndLogActionMessage("Failed to insert file information [OriginalFileNameWithPath=%s]", fileInfo.getOriginalFileNameWithPath());
+				System.exit(Photons.errorCodeFailedToInsertFileInfoInformationIntoDatabase);
 			}
 			
 			preparedInsertFileInfoStatement.close();
 
-			// TODO: note that fileInfo has no ID yet - it should be queried after insertion
-			storeFileGroupInformation(connection, fileInfo);
+			storeFileGroupInformation(connection, fileInfo, null);
 			
-			connection.commit(); // If a transaction is necessary
+			//connection.commit(); // If a transaction is necessary
 			
 			connection.close();
 		} catch (SQLException e) {
 			MyLogger.displayAndLogException(e);
-			System.exit(0); // TODO: use predefinded exit codes
+			System.exit(Photons.errorCodeFailedToInsertFileIntoDatabase);
 		}
 	}
 	
-	private void storeFileGroupInformation(Connection connection, FileImportedInfo fileInfo) throws SQLException {
-		// TODO: implement
+	private void storeFileGroupInformation(Connection connection, FileImportedInfo fileInfo, FileImportedInfo existingFileImportedInfo) throws SQLException {
 		
-		// TODO: File group information storage could be moved to a separate method
-		// Steps:
-		// 1. Check if group already exists; If not, insert new.
-		// 2. Insert association of file with group.
-		PreparedStatement preparedInsertFileGroupStatement = connection.prepareStatement(fileGroupInsertCommandSql);
+		String description = fileInfo.getFilePath();
 		
-		preparedInsertFileGroupStatement.setString(1, fileInfo.getFilePath());
-		preparedInsertFileGroupStatement.setLong(2, new Date().getTime());
+		long groupId = getFileGroupId(connection, description);
+
+		if (groupId == DatabaseUtil.idNotSetValue) {
+			// File group does not exist - inserting new
+			PreparedStatement preparedInsertFileGroupStatement = connection.prepareStatement(fileGroupInsertCommandSql);
+			preparedInsertFileGroupStatement.setString(1, description);
+			preparedInsertFileGroupStatement.setLong(2, new Date().getTime());
+			if (preparedInsertFileGroupStatement.executeUpdate() != 1) {
+				MyLogger.displayAndLogActionMessage("Failed to insert filegroup information [description=%s]", description);
+				System.exit(Photons.errorCodeFailedToInsertFileGroupInformationIntoDatabase);
+			}
+			
+			preparedInsertFileGroupStatement.close();
+			
+			groupId = getFileGroupId(connection, description);
+		}
+
+		long fileId = DatabaseUtil.idNotSetValue;
+		if (existingFileImportedInfo == null) {
+			existingFileImportedInfo = getFileImportedInfo(fileInfo.getHash(), fileInfo.getLength());
+		}
 		
-		preparedInsertFileGroupStatement.executeUpdate();
+		fileId = existingFileImportedInfo.getId();
 		
-		preparedInsertFileGroupStatement.close();
+		if (getFileGroupAssignmentId(connection, groupId, fileId) == DatabaseUtil.idNotSetValue) {
+			PreparedStatement preparedInsertFileGroupAssignmentStatement = connection.prepareStatement(fileGroupAssignmentInsertCommandSql);
+			preparedInsertFileGroupAssignmentStatement.setLong(1, groupId);
+			preparedInsertFileGroupAssignmentStatement.setLong(2, fileId);
+			preparedInsertFileGroupAssignmentStatement.setLong(3, new Date().getTime());
+			if (preparedInsertFileGroupAssignmentStatement.executeUpdate() != 1) {
+				MyLogger.displayAndLogActionMessage("Failed to insert filegroup assignment information [groupId=%d] [fileId=%d]", groupId, fileId);
+				System.exit(Photons.errorCodeFailedToInsertFileGroupAssignmentInformationIntoDatabase);
+			}
+			
+			preparedInsertFileGroupAssignmentStatement.close();
+		}
 	}
 	
-	public void addSourcePathInfo(FileToImportInfo fileToImportInfo, FileToImportInfo existingFileToImportInfo) {
+	private long getFileGroupId(Connection connection, String description) throws SQLException {
+		
+		long groupId = DatabaseUtil.idNotSetValue;
+		
+		PreparedStatement fileGroupQueryStatement = connection.prepareStatement(selectFileGroupCommandSql);
+		
+		fileGroupQueryStatement.setString(1, description);
+		
+		ResultSet fileGroupQueryResultSet = fileGroupQueryStatement.executeQuery();
+		while ( fileGroupQueryResultSet.next() ) {
+			groupId = fileGroupQueryResultSet.getInt(fieldNameId);
+		}
+		
+		fileGroupQueryResultSet.close();
+
+		fileGroupQueryStatement.close();
+		
+		return groupId;
+	}
+	
+	private long getFileGroupAssignmentId(Connection connection, long groupId, long fileId) throws SQLException {
+		
+		long assignmentId = DatabaseUtil.idNotSetValue;
+		
+		PreparedStatement fileGroupAssignmentQueryStatement = connection.prepareStatement(selectFileGroupAssignmentCommandSql);
+		
+		fileGroupAssignmentQueryStatement.setLong(1, groupId);
+		fileGroupAssignmentQueryStatement.setLong(2, fileId);
+		
+		ResultSet fileGroupAssignmentQueryResultSet = fileGroupAssignmentQueryStatement.executeQuery();
+		while ( fileGroupAssignmentQueryResultSet.next() ) {
+			assignmentId = fileGroupAssignmentQueryResultSet.getLong(fieldNameId);
+		}
+		
+		fileGroupAssignmentQueryResultSet.close();
+
+		fileGroupAssignmentQueryStatement.close();
+		
+		return assignmentId;
+	}
+	
+	public void addSourcePathInfo(FileImportedInfo fileImportedInfo, FileImportedInfo existingFileImportedInfo) {
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(this.connectionString);
 			
-			connection.setAutoCommit(false); // If running multiple actions in a transaction
+			//connection.setAutoCommit(false); // If running multiple actions in a transaction
 			
-			// TODO: implement
-			storeFileGroupInformation(connection, );
+			storeFileGroupInformation(connection, fileImportedInfo, existingFileImportedInfo);
 			
-			connection.commit(); // If a transaction is necessary
+			//connection.commit(); // If a transaction is necessary
 			
 			connection.close();
 		} catch (SQLException e) {
 			MyLogger.displayAndLogException(e);
-			System.exit(0); // TODO: use predefinded exit codes
+			System.exit(Photons.errorCodeFailedToAddSourcePathInformationToDatabase);
 		}
 	}
 	
@@ -251,7 +342,7 @@ public class FileInfoDatabase {
 		    while ( resultSet.next() ) {
 		    	if (fileImportedInfoWasAlreadyRetrieved) {
 		    		MyLogger.displayAndLogActionMessage("ERROR: Duplicate imported file found. [Hash=%s] [Length=%d] [File=%s]", originalFileContentHash, originalFileLength, fileImportedInfo.getOriginalFileNameWithPath());
-		    		// TODO: duplicate element found (same hash and length), what to do now???? Exit?
+					System.exit(Photons.errorCodeDuplicateImportedFile);
 		    	}
 		    	
 		    	fileImportedInfo = FileImportedInfo.getFileImportedInfoFromDatabase(resultSet);
@@ -265,11 +356,9 @@ public class FileInfoDatabase {
 			connection.close();
 		} catch (SQLException e) {
 			MyLogger.displayAndLogException(e);
-			System.exit(0);
+			System.exit(Photons.errorCodeFailedToGetFileInformationFromDatabase);
 		}
 		
 		return fileImportedInfo;
 	}
-	
-	
 }

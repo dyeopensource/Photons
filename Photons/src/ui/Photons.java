@@ -17,6 +17,15 @@ public class Photons {
 	public static int errorCodeFailedToCreateLogFile = 3;
 	public static int errorCodeLengthMismatch = 4;
 	public static int errorCodeHashMismatch = 5;
+	public static int errorCodeFailedToInsertFileIntoDatabase = 6;
+	public static int errorCodeFailedToAddSourcePathInformationToDatabase = 7;
+	public static int errorCodeFailedToGetFileInformationFromDatabase = 8;
+	public static int errorCodeUnsupportedDatabaseVersion = 9;
+	public static int errorCodeFailedToInsertFileGroupInformationIntoDatabase = 10;
+	public static int errorCodeFailedToInsertFileGroupAssignmentInformationIntoDatabase = 11;
+	public static int errorCodeDuplicateImportedFile = 12;
+	public static int errorCodeFileInsertionVerificationFailed = 13;
+	public static int errorCodeFailedToInsertFileInfoInformationIntoDatabase = 14;
 	
 	private static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyyMMdd-HHmmSS");  
 	
@@ -24,7 +33,6 @@ public class Photons {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO: implement logging
 
 		if (args.length != 3) {
 			MyLogger.displayActionMessage("Wrong usage. Command line parameters:\n<SourcePath> <DestinationPath> <Type>\nExample:\nPhotons /media/store /home/myUser/pictures jpg");
@@ -65,6 +73,6 @@ public class Photons {
 			MyLogger.displayAndLogException(e);
 		}
 
-		MyLogger.displayActionMessage("Done");
+		MyLogger.displayAndLogActionMessage("Done");
 	}
 }

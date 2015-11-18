@@ -10,6 +10,11 @@ import java.util.Date;
 public class DatabaseUtil {
 	
 	/**
+	 * A special value for an ID if it is not set
+	 */
+	public static long idNotSetValue = -1;
+	
+	/**
 	 * Gets a single character string (0/1) from a boolean value
 	 * @param value
 	 * @return

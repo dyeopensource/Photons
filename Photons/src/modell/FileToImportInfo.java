@@ -7,6 +7,7 @@ import java.nio.file.Paths;
 import java.util.Date;
 
 import common.FileUtil;
+import common.MyLogger;
 
 /**
  * Represents the important information about a file to be imported.
@@ -22,6 +23,8 @@ public class FileToImportInfo {
 	private long length;
 	private String hash;
 	private Date lastModificationTime;
+	private Date mediaContentDate;
+	private Date userDate;
 	
 	/**
 	 * Class constructor from Path object of the file.
@@ -32,6 +35,13 @@ public class FileToImportInfo {
 		Path realPath = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
 		this.filePath = realPath.getParent().toString();
 		setFileData(realPath);
+		
+		// TODO: implement getting the real media content date
+		this.setMediaContentDate(new Date(0));
+
+		this.setUserDate(this.lastModificationTime);
+		
+		MyLogger.displayAndLogActionMessage("Calculated info for [%s]", realPath);
 	}
 	
 	/**
@@ -107,5 +117,21 @@ public class FileToImportInfo {
 	 */
 	public Date getLastModificationTime() {
 		return this.lastModificationTime;
+	}
+
+	public Date getUserDate() {
+		return this.userDate;
+	}
+
+	public void setUserDate(Date userDate) {
+		this.userDate = userDate;
+	}
+
+	public Date getMediaContentDate() {
+		return this.mediaContentDate;
+	}
+
+	public void setMediaContentDate(Date mediaContentDate) {
+		this.mediaContentDate = mediaContentDate;
 	}
 }

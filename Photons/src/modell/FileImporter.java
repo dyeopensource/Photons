@@ -89,8 +89,6 @@ public class FileImporter {
 			Path targetFolder = Paths.get(importTargetPath.toString(), fileImportedInfo.getSubfolder());
 			Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
 
-			// TODO: move already imported check to a method / function
-			
 			// Actions here:
 			// Check if the file is already imported.
 			// If there is a record in the database with the same hash and size, it means the file was already imported.
@@ -106,16 +104,16 @@ public class FileImporter {
 					fileImportedInfo.getHash(),
 					fileImportedInfo.getLength());
 			// Checking if the imported file exists
-			FileToImportInfo existingFileToImportInfo = null;
-			if (existingFileImportedInfo != null) {
+			if (existingFileImportedInfo == null) {
+				addNewFileInfo = true;
+			} else {
 				// File was already imported
 				MyLogger.displayActionMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
 				MyLogger.displayAndLogActionMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(importTargetPath.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
 				// Checking if imported file exists
 				if (Files.exists(Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString()))) {
 					// Imported file exists: checking if length and hash is correct (sanity check). If not - report an error
-					// TODO: how to handle errors here? Remove existing file from database and import again? Or keep it somehow and only report the problem without exiting?
-					existingFileToImportInfo = new FileToImportInfo(targetPath);
+					FileToImportInfo existingFileToImportInfo = new FileToImportInfo(targetPath);
 					if (existingFileToImportInfo.getLength() != existingFileImportedInfo.getLength()) {
 						// Length mismatch
 						MyLogger.displayAndLogActionMessage("File length mismatch. Length in database: [%d]. Real file lentgh: [%d].", existingFileImportedInfo.getLength(), existingFileToImportInfo.getLength());
@@ -163,12 +161,11 @@ public class FileImporter {
 						fileImportedInfo.getHash(),
 						fileImportedInfo.getLength());
 				if (createdFileImportedInfo == null) {
-					// TODO: how to handle the error?
-					MyLogger.displayAndLogActionMessage("ERROR: error during addition of file info to database.");
-					return;
+					MyLogger.displayAndLogActionMessage("ERROR: error during addition of file info to database. [%s]", file);
+					System.exit(Photons.errorCodeFileInsertionVerificationFailed);
 				}
 			} else {
-				fileInfoDatabase.addSourcePathInfo(fileToImportInfo, existingFileToImportInfo);
+				fileInfoDatabase.addSourcePathInfo(fileImportedInfo, existingFileImportedInfo);
 			}
 			
 			// Success
@@ -212,6 +209,8 @@ public class FileImporter {
 		if (!fileCopySuccess(file, fileImportedInfo, targetPath)) {
 			return;
 		}
+		
+		MyLogger.displayAndLogActionMessage("Copy verified, success.");
 	}
 	
 	private Boolean fileCopySuccess(
