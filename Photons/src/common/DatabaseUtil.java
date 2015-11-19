@@ -15,9 +15,9 @@ public class DatabaseUtil {
 	public static long idNotSetValue = -1;
 	
 	/**
-	 * Gets a single character string (0/1) from a boolean value
-	 * @param value
-	 * @return
+	 * Gets a single character string ("0"/"1") from a boolean value
+	 * @param value The boolean value to convert to String
+	 * @return A single character string ("0"/"1") from a boolean value
 	 */
 	public static String getStringFromBoolValue(boolean value) {
 		return value ? "1" : "0";
