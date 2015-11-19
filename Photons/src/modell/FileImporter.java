@@ -122,9 +122,9 @@ public class FileImporter {
 						System.exit(Photons.errorCodeLengthMismatch);
 					}
 					
-					if (existingFileToImportInfo.getHash() != existingFileImportedInfo.getHash()) {
+					if (!existingFileToImportInfo.getHash().equals(existingFileImportedInfo.getHash())) {
 						// Hash mismatch
-						MyLogger.displayAndLogActionMessage("File hash mismatch. Hash in database: [%d]. Real file hash: [%d].", existingFileImportedInfo.getHash(), existingFileToImportInfo.getHash());
+						MyLogger.displayAndLogActionMessage("File hash mismatch. Hash in database: [%s]. Real file hash: [%s].", existingFileImportedInfo.getHash(), existingFileToImportInfo.getHash());
 						System.exit(Photons.errorCodeHashMismatch);
 					}
 				} else {
