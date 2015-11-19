@@ -98,6 +98,7 @@ public class FileImporter {
 			// In this case the ImportEnabled flag is set to false and the file should not be imported again.
 			// Bit if the flag is true, the file should be copied again.
 			Boolean addNewFileInfo = false;
+			Boolean copyFile = false;
 			FileImportedInfo existingFileImportedInfo = null;
 			// Retrieving imported file info
 			existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
@@ -106,6 +107,7 @@ public class FileImporter {
 			// Checking if the imported file exists
 			if (existingFileImportedInfo == null) {
 				addNewFileInfo = true;
+				copyFile = true;
 			} else {
 				// File was already imported
 				MyLogger.displayActionMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
@@ -133,12 +135,12 @@ public class FileImporter {
 						return;
 					}
 					
-					addNewFileInfo = true;
+					copyFile = true;
 					MyLogger.displayAndLogActionMessage("Reimporting...");
 				}
 			}
 			
-			if (addNewFileInfo) {
+			if (copyFile) {
 				if (Files.exists(targetPath)) {
 					// This case can happen. E.g. if the picture was saved and resized to another location with the same name.
 					Path oldTargetPath = targetPath;

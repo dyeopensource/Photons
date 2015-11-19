@@ -55,7 +55,7 @@ public class FileImportedInfo {
 		this.subFolder = FileUtil.subfolderDateFormatter.format(this.fileLastModificationTime);
 		this.fileName = originalFileInfo.getFileName();
 		
-		this.importEnabled = false;
+		this.importEnabled = true;
 		
 		if (this.originalFileNameWithPath.toLowerCase().endsWith(".jpg")) {
 			this.type = 1;
@@ -136,7 +136,7 @@ public class FileImportedInfo {
 	}
 
 	public Date getLastModificationTime() {
-		return fileLastModificationTime;
+		return this.fileLastModificationTime;
 	}
 
 	private void setLastModificationTime(Date lastModificationTime) {
@@ -168,7 +168,7 @@ public class FileImportedInfo {
 	}
 
 	public String getFileName() {
-		return fileName;
+		return this.fileName;
 	}
 
 	public void setFileName(String fileName) {

@@ -20,7 +20,7 @@ public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionString = "2.3";
+	private static final String versionString = "2.3.1";
 	
 	private static final String fieldNameId = "id";
 	
