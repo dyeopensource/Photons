@@ -35,7 +35,6 @@ public class DatabaseUtil {
 	/**
 	 * Gets the current date as long
 	 * @return	The current date as long
-	 * TODO: this method is not tested
 	 */
 	public static long getLongTimeStampCurrent() {
 		return new Date().getTime();
@@ -44,7 +43,6 @@ public class DatabaseUtil {
 	/**
 	 * Checks if SQLite JDBC is present or not.
 	 * If not, logs and exits the application.
-	 * TODO: this method is not tested yet
 	 */
 	public static void CheckSQLite() {
 	    try {

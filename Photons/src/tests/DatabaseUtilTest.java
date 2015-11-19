@@ -34,6 +34,13 @@ public class DatabaseUtilTest {
 	}
 
 	@Test
+	public void testIdNotSetValue() {
+		if (DatabaseUtil.idNotSetValue != -1) {
+			fail(String.format("Unexpected value for DatabaseUtil.idNotSetValue. Sould be [%d], but was [%d].", -1, DatabaseUtil.idNotSetValue));
+		}
+	}
+	
+	@Test
 	public void testGetStringFromBoolValue_FromFalse0_Succeeds() {
 		Boolean input = false;
 		String result = DatabaseUtil.getStringFromBoolValue(input); 
@@ -69,13 +76,13 @@ public class DatabaseUtilTest {
 		}
 	}
 
-//	@Test
-//	public void testGetLongTimeStampCurrent() {
-//		fail("Not yet implemented");
-//	}
-//
-//	@Test
-//	public void testCheckSQLite() {
-//		fail("Not yet implemented");
-//	}
+	@Test
+	public void testGetLongTimeStampCurrent() {
+		fail("Not yet implemented");
+	}
+
+	@Test
+	public void testCheckSQLite() {
+		fail("Not yet implemented");
+	}
 }
