@@ -17,10 +17,8 @@ import java.util.Date;
  */
 public class MyLogger {
 	private static SimpleDateFormat dateTimeLogFormatter = new SimpleDateFormat("yyyy.MM.dd-HH:mm:ss.SSS");  
-	//private static final Logger fileLogger=Logger.getLogger("Photons");
 	
 	private static Path logPath;
-	//private static String logFile;
 	
 	public static void displayAndLogActionMessage(String format, Object... args) {
 		String message = String.format(format, args);
@@ -72,13 +70,4 @@ public class MyLogger {
 		    }
 		}
 	}
-
-	
-//	public static String getLogFile() {
-//		return logFile;
-//	}
-	
-//	public static void setLogFile(String logFile) {
-//		MyLogger.logFile = logFile;
-//	}
 }

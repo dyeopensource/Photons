@@ -22,8 +22,8 @@ public class FileImporter {
 	private Path importSourcePath;
 	
 	/**
-	 * The target folder of the import action. Imported files will be stored in the subdirectories of this folder.
-	 * The database storing file infos will also be located here
+	 * The target folder of the import action. Imported files will be stored in the subfolders of this folder.
+	 * The database storing file info will also be located here
 	 */
 	private Path importTargetPath;
 	

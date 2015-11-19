@@ -105,10 +105,6 @@ public class FileInfoDatabase {
 		setPrivateData(databaseFolder, defaultDatabaseFileName);
 	}
 
-	public FileInfoDatabase(Path databaseFolder, String fileName) {
-		setPrivateData(databaseFolder, fileName);
-	}
-	
 	private void setPrivateData(Path databaseFolder, String fileName) {
 		this.databaseFolder = databaseFolder;
 		this.databaseFilePath = Paths.get(databaseFolder.toString(), fileName);
