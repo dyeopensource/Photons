@@ -47,12 +47,12 @@ public class Photons {
 		destinationPath = args[1];
 		type = args[2];
 
-		if (!FileUtil.FolderExists(sourcePath)) {
+		if (!FileUtil.folderExists(sourcePath)) {
 			MyLogger.displayAndLogActionMessage("Import source folder [%s] does not exist. Cannot import.", sourcePath);
 			System.exit(errorCodeImportSourceFolderDoesNotExist);
 		}
 		
-		if (!FileUtil.FolderExists(destinationPath)) {
+		if (!FileUtil.folderExists(destinationPath)) {
 			MyLogger.displayAndLogActionMessage("Import target folder [%s] does not exist. Cannot import.", destinationPath);
 			System.exit(errorCodeImportTargetFolderDoesNotExist);
 		}

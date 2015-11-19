@@ -99,11 +99,11 @@ public class FileUtil {
 	} 
 
 	/**
-	 * Checks if a directory exists or not
-	 * @param path The path to the directory
-	 * @return True if the directory exists, false if it does not exist or it is not a directory but a folder
+	 * Checks if a folder exists or not
+	 * @param path The path to the folder
+	 * @return True if the folder exists, false if it does not exist or it the path points to a file, not to a folder
 	 */
-	public static Boolean FolderExists(String path) {
+	public static Boolean folderExists(String path) {
 		return (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)));
 	}
 }
