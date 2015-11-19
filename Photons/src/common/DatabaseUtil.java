@@ -25,7 +25,7 @@ public class DatabaseUtil {
 	
 	/**
 	 * Gets a boolean value from a string value stored in the database
-	 * @param value	The string from the database to convert to boolean (0/1)
+	 * @param value	The string (retrieved from the database) to convert to boolean (0/1)
 	 * @return		A boolean value as a result of the string parsed
 	 */
 	public static boolean getBooleanFromStringValue(String value) {
