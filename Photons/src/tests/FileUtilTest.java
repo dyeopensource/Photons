@@ -40,6 +40,63 @@ public class FileUtilTest {
 	}
 
 	@Test
+	public void testFolderExists() throws IOException {
+		Path tempFolderPath = null;
+		try {
+			tempFolderPath = Files.createTempDirectory("FileUtilTest");
+			if (!FileUtil.folderExists(tempFolderPath.toString())) {
+				fail("Failed to report existing folder.");
+			}
+		} finally {
+			Files.deleteIfExists(tempFolderPath);
+		}
+
+		if (tempFolderPath == null || FileUtil.folderExists(tempFolderPath.toString())) {
+			fail("Deleted folder reported as existing.");
+		}
+	}
+	
+	@Test
+	public void testGetAlternateFileName_GeneratesFileNameCorrectly_Succeeds() {
+		Path tempFile = null;
+		try {
+			try {
+				tempFile = Files.createTempFile("Photons_test_GetAlternateFileName", ".txt");
+			} catch (IOException e) {
+				e.printStackTrace();
+				fail("Could not create temp file.");
+			}
+			
+			Path newFilePath = FileUtil.getAlternateFileName(tempFile);
+			boolean fileExists = false;
+			try {
+				if (Files.exists(newFilePath)) {
+					fileExists = true;
+					fail("New file already exists.");
+				}
+			} finally {
+				if (fileExists) {
+					try {
+						Files.delete(newFilePath);
+					} catch (IOException e) {
+						e.printStackTrace();
+						fail(String.format("Failed to delete new file [%s]", newFilePath));
+					}
+				}
+			}
+		} finally {
+			try {
+				if (tempFile != null) {
+					Files.delete(tempFile);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				fail(String.format("Failed to delete temporary file [%s]", tempFile));
+			}
+		}
+	}
+
+	@Test
 	public void testGetFileContentHash_CalculatesHashCorrectly_Succeeds() {
 		Path tempFile = null;
 		try {
@@ -82,46 +139,6 @@ public class FileUtilTest {
 				fail("Failed to get hash string.");
 			}
 			
-		} finally {
-			try {
-				if (tempFile != null) {
-					Files.delete(tempFile);
-				}
-			} catch (IOException e) {
-				e.printStackTrace();
-				fail(String.format("Failed to delete temporary file [%s]", tempFile));
-			}
-		}
-	}
-
-	@Test
-	public void testGetAlternateFileName_GeneratesFileNameCorrectly_Succeeds() {
-		Path tempFile = null;
-		try {
-			try {
-				tempFile = Files.createTempFile("Photons_test_GetAlternateFileName", ".txt");
-			} catch (IOException e) {
-				e.printStackTrace();
-				fail("Could not create temp file.");
-			}
-			
-			Path newFilePath = FileUtil.getAlternateFileName(tempFile);
-			boolean fileExists = false;
-			try {
-				if (Files.exists(newFilePath)) {
-					fileExists = true;
-					fail("New file already exists.");
-				}
-			} finally {
-				if (fileExists) {
-					try {
-						Files.delete(newFilePath);
-					} catch (IOException e) {
-						e.printStackTrace();
-						fail(String.format("Failed to delete new file [%s]", newFilePath));
-					}
-				}
-			}
 		} finally {
 			try {
 				if (tempFile != null) {
