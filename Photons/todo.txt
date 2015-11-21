@@ -1,23 +1,26 @@
+Review:
+- Check logging / output... Errors should be logged and also displayed
+- implement remaining tests for all public methods of the classes
+
 Feature:
-- If calendar import will be possible then UTC timestamp will be advisable.. -> Check java Date handling
-- Check logging / output...
-- We could use media datetime information (EXIF) 
-- duplicate sources: in new table (can be a source of arrangement)
-- maybe sound files can be stored also this way - but in this case the file date is not the primary sorting key
-- and also this software could be used to backup every kind of data - in this case restore could be an interesting task + duplicate finding
+- Implement media timestamp information (EXIF) - storage is implemented, calculation pending
+- implement UI for
+	a. deletion
+	b. (un)assignemnt of files and groups (will be important when calendar event will be imported)
 - Import events from google calendar. This contains events on which photos and videos were made. -> Media description/album title candidate.
+	- This implies database changes, because events have a start and end interval. By this information the group structure could be extended or events will be special types of groups (interval assigned with a group).
 	My photo/video calendar:
 		Private:
 			XML:	https://www.google.com/calendar/feeds/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic 
 			ICAL:	https://www.google.com/calendar/ical/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic.ics
-- files could be assigned to (multiple) events
 
-Implement FileInfoDatabase: should do similar thing than DatabaseUtil, but rather fileinfo specific.
-Should not be static, default filename should be fileinfo.sqlite
-
-Errors should be logged, not only displayed
+Possible improvements:
+- Apply to sound files
+- Could be used to backup every kind of data - in this case restore could be an interesting task + duplicate finding
 
 Tests:
+
+- create integration test with all possible real scenarios (testdata, folder structure, database check) - including database and import checks described bellow
 
 - check for test (maintenance) tools
 
@@ -25,6 +28,7 @@ Create tests for the project:
 - have sample Canon memory card copy with every possible kind of 
 	- photos and 
 	- videos
+	- also sound files
 - have sample Sony memory stick copy with every possible kind of
 	- photos,
 	- SD and
@@ -50,5 +54,6 @@ Create tests for the project:
 	- file with different name, different content
 	- file with same content, different name
 	- file with same name, different path, same content
+	- check if filer paths are inserted correctly as groups - also check file-group assignments
 - Check not only the actions but also logging
 
