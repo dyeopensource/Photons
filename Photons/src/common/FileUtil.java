@@ -23,6 +23,15 @@ public class FileUtil {
 	public static SimpleDateFormat subfolderDateFormatter = new SimpleDateFormat("yyyy/MM/dd");  
 
 	/**
+	 * Checks if a folder exists or not
+	 * @param path The path to the folder
+	 * @return True if the folder exists, false if it does not exist or it the path points to a file, not to a folder
+	 */
+	public static Boolean folderExists(String path) {
+		return (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)));
+	}
+
+	/**
 	 * Gets an SHA-256 hash string of the content of the file
 	 * @param fileName		The name of the file to hash with full path
 	 * @return				A string containing the hash string
@@ -97,13 +106,4 @@ public class FileUtil {
 	      fis.close();  
 	      return complete.digest();  
 	} 
-
-	/**
-	 * Checks if a folder exists or not
-	 * @param path The path to the folder
-	 * @return True if the folder exists, false if it does not exist or it the path points to a file, not to a folder
-	 */
-	public static Boolean folderExists(String path) {
-		return (Files.exists(Paths.get(path)) && Files.isDirectory(Paths.get(path)));
-	}
 }
