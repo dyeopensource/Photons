@@ -15,7 +15,7 @@ import common.MyLogger;
 /**
  * Information about an imported file
  * @author emil
- *
+ * TODO: this class is not tested yet
  */
 public class FileImportedInfo {
 	

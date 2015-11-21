@@ -19,8 +19,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
+ * Tests for the modell.FileToImportInfo class
  * @author emil
- *
  */
 public class FileToImportInfoTest {
 
@@ -111,11 +111,9 @@ public class FileToImportInfoTest {
 			fail(String.format("Wrong fileName: [%s]. Should be [%s].", fileName, this.testFileName));
 		}
 		
-		long length = fileToImportInfo.getLength();
-		long referenceLength = 6130;
-		if (length != referenceLength) {
-			fail(String.format("Wrong file length: [%s]. Should be [%d].", length, referenceLength));
-		}
+		// TODO: Test getFileNameWithPath
+		
+		// TODO: Test getFilePath
 		
 		String fileContentHash = fileToImportInfo.getHash();
 		String referenceHash = "994ca7616d83e21ec41cde5a2936fe8e06749207843f14e559a2f928fe1f6611";
@@ -128,5 +126,21 @@ public class FileToImportInfoTest {
 		if (!lastModificationTime.equals(referenceTime)) {
 			fail(String.format("Wrong lastModificationTime: [%s]. Should be [%s].", lastModificationTime, referenceTime));
 		}
+		
+		long length = fileToImportInfo.getLength();
+		long referenceLength = 6130;
+		if (length != referenceLength) {
+			fail(String.format("Wrong file length: [%s]. Should be [%d].", length, referenceLength));
+		}
+		
+		// TODO: Test getMediaContentDate
+		
+		// TODO: Test getUserDate
+		
+		// TODO: test setFileDate
+		
+		// TODO: Test setMediaContentDate
+		
+		// TODO: Test setUserDate
 	}
 }

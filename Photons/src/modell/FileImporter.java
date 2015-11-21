@@ -13,7 +13,11 @@ import common.FileUtil;
 import common.MyLogger;
 import ui.Photons;
 
-
+/**
+ * This class is responsible for importing files from a folder 
+ * @author emil
+ * TODO: this class is not tested yet
+ */
 public class FileImporter {
 
 	/**

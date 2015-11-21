@@ -3,12 +3,19 @@ Review:
 - implement remaining tests for all public methods of the classes
 
 Feature:
+- Implement option: check consistency (no files in subdirectories, which are not in the database, length and hash match) 
 - Implement media timestamp information (EXIF) - storage is implemented, calculation pending
+	- JPG (Canon camera photo, also smartphone)
+	- MPG (Sony handycam video)
+	- MOV (Canon camera video)
+	- M2T(?) (AVCHD from Sony handycam)
+	- ?
 - implement UI for
 	a. deletion
 	b. (un)assignemnt of files and groups (will be important when calendar event will be imported)
 - Import events from google calendar. This contains events on which photos and videos were made. -> Media description/album title candidate.
-	- This implies database changes, because events have a start and end interval. By this information the group structure could be extended or events will be special types of groups (interval assigned with a group).
+	- This implies database changes, because events have a start and end interval (also location).
+		Events will be special types of groups (additional data assigned with a group).
 	My photo/video calendar:
 		Private:
 			XML:	https://www.google.com/calendar/feeds/7910lb5184v78c2kuts4c63ok0%40group.calendar.google.com/private-0ec2d90c244eb0c3cf23200f43c789bc/basic 
@@ -42,6 +49,8 @@ Create tests for the project:
 	- photo
 	- video
 	- sound
+- have sample folder/files from a smartphone
+
 - Database should be tested:
 	- created if does not exist
 	- opened if current version
@@ -55,5 +64,6 @@ Create tests for the project:
 	- file with same content, different name
 	- file with same name, different path, same content
 	- check if filer paths are inserted correctly as groups - also check file-group assignments
+
 - Check not only the actions but also logging
 

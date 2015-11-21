@@ -11,7 +11,6 @@ import java.text.SimpleDateFormat;
 /**
  * A common class for general file operations
  * @author emil
- *
  */
 public class FileUtil {
 

@@ -12,7 +12,7 @@ import common.MyLogger;
 /**
  * Represents the important information about a file to be imported.
  * @author emil
- *
+ * TODO: this class is not tested yet
  */
 public class FileToImportInfo {
 	

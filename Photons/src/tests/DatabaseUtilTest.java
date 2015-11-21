@@ -13,7 +13,6 @@ import common.DatabaseUtil;
 /**
  * Tests for the common.DatabaseUtil class
  * @author emil
- *
  */
 public class DatabaseUtilTest {
 

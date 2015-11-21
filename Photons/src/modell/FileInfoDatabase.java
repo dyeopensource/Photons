@@ -15,7 +15,11 @@ import common.DatabaseUtil;
 import common.MyLogger;
 import ui.Photons;
 
-
+/**
+ * This class is responsible for the database storage of imported files 
+ * @author emil
+ * TODO: this class is not tested yet
+ */
 public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";

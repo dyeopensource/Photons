@@ -19,7 +19,6 @@ import common.FileUtil;
 /**
  * Tests for the common.FileUtil class
  * @author emil
- *
  */
 public class FileUtilTest {
 
@@ -101,7 +100,7 @@ public class FileUtilTest {
 		Path tempFile = null;
 		try {
 			try {
-				tempFile = Files.createTempFile("Photons_test_GetAlternateFileName", ".txt");
+				tempFile = Files.createTempFile("Photons_test_CalculatesHashCorrectly", ".txt");
 			} catch (IOException e) {
 				e.printStackTrace();
 				fail("Could not create temp file.");
