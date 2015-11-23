@@ -65,6 +65,8 @@ Create tests for the project:
 	- file with same content, different name
 	- file with same name, different path, same content
 	- check if filer paths are inserted correctly as groups - also check file-group assignments
+	- importing the same file from the same path should not create a new file, nor add a group, nor new assignment
+	- alternate filename generation should work correctly (if file alreday exists -> generate new; if not, not; if there was already a generated path, find the file
 
 - Check not only the actions but also logging
 

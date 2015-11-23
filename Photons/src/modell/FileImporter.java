@@ -117,21 +117,7 @@ public class FileImporter {
 				MyLogger.displayActionMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
 				MyLogger.displayAndLogActionMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(importTargetPath.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
 				// Checking if imported file exists
-				if (Files.exists(Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString()))) {
-					// Imported file exists: checking if length and hash is correct (sanity check). If not - report an error
-					FileToImportInfo existingFileToImportInfo = new FileToImportInfo(targetPath);
-					if (existingFileToImportInfo.getLength() != existingFileImportedInfo.getLength()) {
-						// Length mismatch
-						MyLogger.displayAndLogActionMessage("File length mismatch. Length in database: [%d]. Real file lentgh: [%d].", existingFileImportedInfo.getLength(), existingFileToImportInfo.getLength());
-						System.exit(Photons.errorCodeLengthMismatch);
-					}
-					
-					if (!existingFileToImportInfo.getHash().equals(existingFileImportedInfo.getHash())) {
-						// Hash mismatch
-						MyLogger.displayAndLogActionMessage("File hash mismatch. Hash in database: [%s]. Real file hash: [%s].", existingFileImportedInfo.getHash(), existingFileToImportInfo.getHash());
-						System.exit(Photons.errorCodeHashMismatch);
-					}
-				} else {
+				if (!Files.exists(Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString()))) {
 					// Imported file does not exist
 					if (!existingFileImportedInfo.getImportEnabled()) {
 						// ImportEnabled flag is set to false - it was deleted intentionally, no reimport
