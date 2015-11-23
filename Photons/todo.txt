@@ -3,6 +3,7 @@ Review:
 - implement remaining tests for all public methods of the classes
 
 Feature:
+- Implement keyboard check (to be able to interrupt the long running import operation without kill)
 - Implement option: check consistency (no files in subdirectories, which are not in the database, length and hash match) 
 - Implement media timestamp information (EXIF) - storage is implemented, calculation pending
 	- JPG (Canon camera photo, also smartphone)
