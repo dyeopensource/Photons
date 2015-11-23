@@ -1,4 +1,4 @@
 Photons
 =======
 
-Media archiver and organizer for tons of photos/videos
+Cross platform media archiver and organizer for tons of photos/videos
