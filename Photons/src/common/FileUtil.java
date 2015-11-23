@@ -56,7 +56,7 @@ public class FileUtil {
 			extension = "." + originalFileName.substring(extensionSeparator + 1);
 		}
 		
-		int i = 1;
+		int i = 2;
 		Path alternateFilePath = originalTargetPath;
 		while (Files.exists(alternateFilePath)) {
 			alternateFilePath = Paths.get(originalPath, String.format("%s(%d)%s", fileNameWithoutExtension, i, extension));
