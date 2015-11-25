@@ -26,27 +26,40 @@ public class Photons {
 	public static int errorCodeDuplicateImportedFile = 12;
 	public static int errorCodeFileInsertionVerificationFailed = 13;
 	public static int errorCodeFailedToInsertFileInfoInformationIntoDatabase = 14;
+	public static int errorCodeCommandDoesNotExist = 15;
 	
-	private static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyyMMdd-HHmmSS");  
+	private static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyyMMdd-HHmmSS");
+	
+	private static String commandImport = "import";
+	
+	// TODO: introduce and implement verify command (check imported folder and database consistency)
+	// this could be called also CheckConsistency (but it is a bit long) 
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
-		if (args.length != 3) {
-			MyLogger.displayActionMessage("Wrong usage. Command line parameters:\n<SourcePath> <DestinationPath> <Type>\nExample:\nPhotons /media/store /home/myUser/pictures jpg");
+		if (args.length != 4) {
+			MyLogger.displayActionMessage("Wrong usage. Command line parameters:\n<Command> <SourcePath> <DestinationPath> <Type>\nExample:\nPhotons /media/store /home/myUser/pictures jpg");
 			return;
 		}
 
+		String command;
 		String sourcePath;
 		String destinationPath;
 		String type;
 		
-		sourcePath = args[0];
-		destinationPath = args[1];
-		type = args[2];
+		command = args[0].toLowerCase();
+		sourcePath = args[1];
+		destinationPath = args[2];
+		type = args[3];
 
+		if (!command.equals(commandImport)) {
+			MyLogger.displayAndLogActionMessage("Command [%s] does not exist. Cannot proceed.", command);
+			System.exit(errorCodeCommandDoesNotExist);
+		}
+		
 		if (!FileUtil.folderExists(sourcePath)) {
 			MyLogger.displayAndLogActionMessage("Import source folder [%s] does not exist. Cannot import.", sourcePath);
 			System.exit(errorCodeImportSourceFolderDoesNotExist);
@@ -66,11 +79,13 @@ public class Photons {
 			System.exit(errorCodeFailedToCreateLogFile);
 		}
 		
-		FileImporter fileImporter = new FileImporter(sourcePath, destinationPath, type);
-		try {
-			fileImporter.Import();
-		} catch (IOException e) {
-			MyLogger.displayAndLogException(e);
+		if (command.equals(commandImport)) {
+			FileImporter fileImporter = new FileImporter(sourcePath, destinationPath, type);
+			try {
+				fileImporter.Import();
+			} catch (IOException e) {
+				MyLogger.displayAndLogException(e);
+			}
 		}
 
 		MyLogger.displayAndLogActionMessage("Done");
