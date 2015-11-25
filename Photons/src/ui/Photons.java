@@ -33,7 +33,9 @@ public class Photons {
 	private static String commandImport = "import";
 	
 	// TODO: introduce and implement verify command (check imported folder and database consistency)
-	// this could be called also CheckConsistency (but it is a bit long) 
+	// this could be called also CheckConsistency (but it is a bit long)
+	
+	// TODO: introduce command: fillmediatimestamp (this would analyze exif information etc. - update database information)
 	
 	/**
 	 * @param args
