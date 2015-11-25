@@ -3,6 +3,7 @@ package modell;
 import java.io.IOException;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
@@ -37,6 +38,8 @@ public class FileImporter {
 	private String fileExtensionToImportLowerCase;
 	
 	private FileInfoDatabase fileInfoDatabase;
+	
+	private Path lastFilePath = null;
 	
 	public FileImporter(String pathToImportFrom, String pathToImportTo, String fileExtensionToImport) {
 		this.importSourcePath = Paths.get(pathToImportFrom);
@@ -76,12 +79,25 @@ public class FileImporter {
 	 */
 	private void visitFile(
 			Path file) {
-		
+
 		if (!fileExtensionFits(file)) {
 			return;
 		}
+		
+		// Display the progress
+		//MyLogger.displayAndLogActionMessage("Importing file [%s]...", file);
+		try {
+			Path filePath = file.toRealPath(LinkOption.NOFOLLOW_LINKS).getParent();
+			if (!filePath.equals(lastFilePath)) {
+				lastFilePath = filePath;
+				MyLogger.displayActionMessage("Importing from [%s]...", lastFilePath);
+			}
+		} catch (Exception e) {
+			MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [%s].", file);
+			MyLogger.displayAndLogException(e);
+			// TODO: should we exit?
+		}
 
-		MyLogger.displayAndLogActionMessage("Importing file [%s]...", file);
 		try {
 			
 			// Data based on the source file
@@ -165,6 +181,7 @@ public class FileImporter {
 		} catch (Exception e) {
 			MyLogger.displayAndLogActionMessage("ERROR: Failed to import file [%s].", file);
 			MyLogger.displayAndLogException(e);
+			// TODO: should we exit?
 		}
 	}
 	
@@ -178,7 +195,7 @@ public class FileImporter {
 		if (file.toString().toLowerCase().endsWith(fileExtensionToImportLowerCase)) {
 			return true;
 		} else {
-			MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
+			//MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
 		}
 
 		return false;
