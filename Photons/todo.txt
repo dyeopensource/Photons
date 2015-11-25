@@ -1,3 +1,7 @@
+Before release:
+- JDBC used: https://github.com/xerial/sqlite-jdbc; https://bitbucket.org/xerial/sqlite-jdbc/downloads
+- Update and add licencing information
+
 Review:
 - Check logging / output... Errors should be logged and also displayed
 - implement remaining tests for all public methods of the classes
@@ -5,7 +9,7 @@ Review:
 Feature:
 - Implement keyboard check (to be able to interrupt the long running import operation without kill)
 - Implement option: check consistency (no files in subdirectories, which are not in the database, length and hash match) 
-- Implement media timestamp information (EXIF) - storage is implemented, calculation pending
+- Implement media timestamp information (EXIF) - storage is implemented, calculation pending (http://commons.apache.org/proper/commons-imaging/ could be used)
 	- JPG (Canon camera photo, also smartphone)
 	- MPG (Sony handycam video)
 	- MOV (Canon camera video)
