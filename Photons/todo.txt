@@ -71,6 +71,12 @@ Create tests for the project:
 	- check if filer paths are inserted correctly as groups - also check file-group assignments
 	- importing the same file from the same path should not create a new file, nor add a group, nor new assignment
 	- alternate filename generation should work correctly (if file alreday exists -> generate new; if not, not; if there was already a generated path, find the file
+	- if there are two files with the same name and content, but different timestamp -> the first should be imported only, second ignored, because user timestamp will win; question: is it possible that in this case the content of the files are different?
 
+	- reliability:
+		- all matching files from the source are imported/checked (either the file can be found or the reimport flag was set to false)
+		- all files in the database match with the database entries
+		- all entries in the database has the corresponding file or the appropriate flag
+		
 - Check not only the actions but also logging
 
