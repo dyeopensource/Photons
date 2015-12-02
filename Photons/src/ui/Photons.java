@@ -62,7 +62,7 @@ public class Photons {
 			+ "java -jar photons.jar import /source=/media/store /destination=/home/myUser/pictures /types=jpg\n"
 			+ "Verifying that all jpg files were imported correctly:\n"
 			+ "java -jar photons.jar verify /source=/media/store /destination=/home/myUser/pictures /types=jpg\n"
-			+ "Chedcking consistency of the target path (e.g. after making a copy of it):\n"
+			+ "Checking consistency of the target path (e.g. after making a copy of it):\n"
 			+ "java -jar photons.jar check /destination=/home/myUser/pictures\n"
 			;
 
