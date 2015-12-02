@@ -1,6 +1,6 @@
 Before release:
 - JDBC used: https://github.com/xerial/sqlite-jdbc; https://bitbucket.org/xerial/sqlite-jdbc/downloads
-- Update and add licencing information
+- Update and add licensing information
 
 Review:
 - Check logging / output... Errors should be logged and also displayed
