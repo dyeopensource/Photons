@@ -30,7 +30,7 @@ public class FileInfoDatabase {
 	
 	private static final String configTableName = "config";
 	private static final String configTableFieldNameValue = "value";
-	private static final String configCreateCommandSql = "CREATE TABLE " + configTableName + " " +
+	private static final String configCreateCommandSql = "CREATE TABLE IF NOT EXISTS " + configTableName + " " +
 			"(" + fieldNameId + "			INTEGER		PRIMARY KEY, " +
 			"key							TEXT		NOT NULL, " +
 			configTableFieldNameValue + "	TEXT		NOT NULL, " +
@@ -42,7 +42,7 @@ public class FileInfoDatabase {
 			"FROM " + configTableName + " WHERE key = 'version' ORDER BY value ASC";
 
 	private static final String fileInfoTableName = "fileinfo";
-	private static final String fileInfoTableCreationCommandSql = "CREATE TABLE " + fileInfoTableName + " " +
+	private static final String fileInfoTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileInfoTableName + " " +
 			"(" + fieldNameId + "			INTEGER	PRIMARY KEY, " +
 			"originalFileNameWithPath		TEXT	NOT NULL, " +
 			"originalLength					INTEGER	NOT NULL, " +
@@ -74,7 +74,7 @@ public class FileInfoDatabase {
 
 	private static final String fileGroupTableName = "filegroup";
 	private static final String fileGroupTableFieldNameDescription = "description";
-	private static final String fileGroupTableCreationCommandSql = "CREATE TABLE " + fileGroupTableName + " " +
+	private static final String fileGroupTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileGroupTableName + " " +
 			"(" + fieldNameId + "					INTEGER	PRIMARY KEY, " +
 			fileGroupTableFieldNameDescription + "	TEXT	NOT NULL, " +
 			"recordLastModificationTime				INTEGER	NOT NULL, " +
@@ -87,7 +87,7 @@ public class FileInfoDatabase {
 			"FROM " + fileGroupTableName + " WHERE description=?";
 
 	private static final String fileGroupAssignmentTableName = "filegroupassignment";
-	private static final String fileGroupAssignmentTableCreationCommandSql = "CREATE TABLE " + fileGroupAssignmentTableName + " " +
+	private static final String fileGroupAssignmentTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileGroupAssignmentTableName + " " +
 			"(" + fieldNameId + "			INTEGER	PRIMARY KEY, " +
 			"groupid						INTEGER	NOT NULL, " +
 			"fileid							INTEGER	NOT NULL, " +
