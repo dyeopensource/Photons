@@ -35,16 +35,19 @@ public class FileImporter {
 	/**
 	 * The lower case file extension which should be used for importing files
 	 */
-	private String fileExtensionToImportLowerCase;
+	private String[] fileExtensionsToImportLowerCase;
 	
 	private FileInfoDatabase fileInfoDatabase;
 	
 	private Path lastFilePath = null;
 	
-	public FileImporter(String pathToImportFrom, String pathToImportTo, String fileExtensionToImport) {
+	public FileImporter(String pathToImportFrom, String pathToImportTo, String[] fileExtensionsToImport) {
 		this.importSourcePath = Paths.get(pathToImportFrom);
 		this.importTargetPath = Paths.get(pathToImportTo);
-		this.fileExtensionToImportLowerCase = fileExtensionToImport.toLowerCase();
+		this.fileExtensionsToImportLowerCase = new String[fileExtensionsToImport.length];
+		for(int i = 0; i < fileExtensionsToImport.length; i++) {
+			this.fileExtensionsToImportLowerCase[i] = fileExtensionsToImport[i].toLowerCase();
+		}
 		
 		this.fileInfoDatabase = new FileInfoDatabase(this.importTargetPath);
 	}
@@ -192,11 +195,13 @@ public class FileImporter {
 	 */
 	private Boolean fileExtensionFits(Path file) {
 		
-		if (file.toString().toLowerCase().endsWith(fileExtensionToImportLowerCase)) {
-			return true;
-		} else {
-			//MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
+		for (int i = 0; i < this.fileExtensionsToImportLowerCase.length; i++) {
+			if (file.toString().toLowerCase().endsWith(this.fileExtensionsToImportLowerCase[i])) {
+				return true;
+			}
 		}
+
+		//MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
 
 		return false;
 	}
