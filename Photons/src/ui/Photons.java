@@ -77,23 +77,25 @@ public class Photons {
 	// TODO: introduce and implement verify command (check imported folder and database consistency)
 	// this could be called also CheckConsistency (but it is a bit long)
 	
-	// TODO: introduce command: fillmediatimestamp (this would analyze exif information etc. - update database information)
+	// TODO: introduce command: fillmediatimestamp (this would analyse EXIF information etc. - update database information)
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 
+		MyLogger.setLogLevel(MyLogger.logLevelInformation);
+		
 		InterpretCommandLineArguments(args);
 		
 		if (Photons.action == Photons.actionShowUsage) {
-			MyLogger.displayActionMessage(usage);
+			MyLogger.displayInformationMessage(usage);
 			System.exit(errorCode);
 		}
 		
 		final Path logPath = Paths.get(Photons.destinationPath, String.format("actions_%s.txt", dateTimeFormatter.format(new Date())));
 		try {
-			MyLogger.setActionLogFile(logPath);
+			MyLogger.setLogFile(logPath);
 		} catch (IOException e) {
 			System.err.println(String.format("ERROR: Could not create logfile '%s'.", logPath));
 			e.printStackTrace();
@@ -105,15 +107,15 @@ public class Photons {
 			try {
 				fileImporter.Import();
 			} catch (IOException e) {
-				MyLogger.displayAndLogException(e);
+				MyLogger.displayAndLogExceptionMessage(e, "Import failed");
 			}
 		} else if (Photons.action == Photons.actionVerify) {
 			// TODO: implement
-			MyLogger.displayAndLogActionMessage("ERROR: Command [%s] is not implemented yet.", Photons.command);
+			MyLogger.displayAndLogErrorMessage("Command [%s] is not implemented yet.", Photons.command);
 			Photons.errorCode = errorCodeCommandOrOptionDoesNotExist;
 		} else if (Photons.action == Photons.actionCheck) {
 			// TODO: implement
-			MyLogger.displayAndLogActionMessage("ERROR: Command [%s] is not implemented yet.", Photons.command);
+			MyLogger.displayAndLogErrorMessage("Command [%s] is not implemented yet.", Photons.command);
 			Photons.errorCode = errorCodeCommandOrOptionDoesNotExist;
 		}
 		
@@ -121,7 +123,7 @@ public class Photons {
 			System.exit(Photons.errorCode);
 		}
 
-		MyLogger.displayAndLogActionMessage("Done");
+		MyLogger.displayAndLogInformationMessage("Done");
 	}
 	
 	/**
@@ -157,7 +159,7 @@ public class Photons {
 						}
 					}
 				} else {
-					MyLogger.displayActionMessage("ERROR: Command or option [%s] does not exist. Cannot proceed.", lowerCaseArg);
+					MyLogger.displayErrorMessage("Command or option [%s] does not exist. Cannot proceed.", lowerCaseArg);
 					errorCode = errorCodeCommandOrOptionDoesNotExist;
 				}
 			}
@@ -178,27 +180,27 @@ public class Photons {
 	
 	private static void CheckSourcePath() {
 		if (Photons.sourcePath == null) {
-			MyLogger.displayAndLogActionMessage("ERROR: Source path not specified.");
+			MyLogger.displayAndLogErrorMessage("Source path not specified.");
 			Photons.action = Photons.actionShowUsage;
 		} else if (!FileUtil.folderExists(sourcePath)) {
-			MyLogger.displayAndLogActionMessage("ERROR: Source folder [%s] does not exist. Cannot %s.", Photons.sourcePath, Photons.command);
+			MyLogger.displayAndLogErrorMessage("Source folder [%s] does not exist. Cannot %s.", Photons.sourcePath, Photons.command);
 			System.exit(errorCodeImportSourceFolderDoesNotExist);
 		}
 	}
 	
 	private static void CheckDestinationPath() {
 		if (Photons.destinationPath == null) {
-			MyLogger.displayAndLogActionMessage("ERROR: Destination path not specified.");
+			MyLogger.displayAndLogErrorMessage("Destination path not specified.");
 			Photons.action = Photons.actionShowUsage;
 		} else if (Photons.destinationPath != null && !FileUtil.folderExists(Photons.destinationPath)) {
-			MyLogger.displayAndLogActionMessage("ERROR: Destination folder [%s] does not exist. Cannot %s.", Photons.destinationPath, Photons.command);
+			MyLogger.displayAndLogErrorMessage("Destination folder [%s] does not exist. Cannot %s.", Photons.destinationPath, Photons.command);
 			System.exit(errorCodeImportDestinationFolderDoesNotExist);
 		}
 	}
 	
 	private static void CheckTypes() {
 		if (Photons.types == null) {
-			MyLogger.displayAndLogActionMessage("ERROR: Types not specified.");
+			MyLogger.displayAndLogErrorMessage("Types not specified.");
 			Photons.action = Photons.actionShowUsage;
 		}
 	}

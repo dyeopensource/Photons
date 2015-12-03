@@ -1,5 +1,6 @@
 package modell;
 
+import java.io.FileNotFoundException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -123,7 +124,7 @@ public class FileInfoDatabase {
 			DatabaseUtil.CheckSQLite();
 
 			if (!Files.exists(this.databaseFolder)) {
-				MyLogger.displayAndLogActionMessage("Path does not exist. Creating folder [%s]...", this.databaseFolder);
+				MyLogger.displayAndLogWarningMessage("Path does not exist. Creating folder [%s]...", this.databaseFolder);
 	    		Files.createDirectories(this.databaseFolder);
 	    	}
 	    	
@@ -136,18 +137,19 @@ public class FileInfoDatabase {
 				while ( resultSet.next() ) {
 					version = resultSet.getString(configTableFieldNameValue);
 				}
+				
 				resultSet.close();
 				queryStatement.close();
 
 				if (version.equals(versionString)) {
 					// OK
-					MyLogger.displayAndLogActionMessage("Database already exists with expected version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder);
+					MyLogger.displayAndLogDebugMessage("Database already exists with expected version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder);
 				} else {
-					MyLogger.displayAndLogActionMessage(String.format("Unsupported database version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder));
+					MyLogger.displayAndLogErrorMessage(String.format("Unsupported database version: [version=%s] at [databaseFolder=%s].", version, this.databaseFolder));
 					System.exit(Photons.errorCodeUnsupportedDatabaseVersion);
 				}
 			} catch ( Exception e ) {
-				MyLogger.displayException(e);
+				MyLogger.displayAndLogExceptionMessage(e, "Version check failed");
 	
 				Statement updateStatement = connection.createStatement();
 				updateStatement.executeUpdate(configCreateCommandSql);
@@ -158,12 +160,12 @@ public class FileInfoDatabase {
 			      
 				updateStatement.close();
 	
-				MyLogger.displayAndLogActionMessage("Created database successfully");
+				MyLogger.displayAndLogDebugMessage("Created database successfully");
 			}
 			
 		    connection.close();
 	    } catch ( Exception e ) {
-	    	MyLogger.displayAndLogException(e);
+	    	MyLogger.displayAndLogExceptionMessage(e, "openOrCreateDatabase failed");
 	    	System.exit(5);
 	    }
 	}
@@ -172,6 +174,7 @@ public class FileInfoDatabase {
 	 * Inserts a new file record into the database
 	 * @param importTargetPath The target folder where the file was copied 
 	 * @param fileInfo The object containing data to be inserted into the database
+	 * @throws FileNotFoundException 
 	 */
 	public void addFileImportedInfo(String importTargetPath, FileImportedInfo fileInfo) {
 		DatabaseUtil.CheckSQLite();
@@ -197,7 +200,7 @@ public class FileInfoDatabase {
 			preparedInsertFileInfoStatement.setLong(12, new Date().getTime());
 			
 			if (preparedInsertFileInfoStatement.executeUpdate() != 1) {
-				MyLogger.displayAndLogActionMessage("Failed to insert file information [OriginalFileNameWithPath=%s]", fileInfo.getOriginalFileNameWithPath());
+				MyLogger.displayAndLogErrorMessage("Failed to insert file information [OriginalFileNameWithPath=%s]", fileInfo.getOriginalFileNameWithPath());
 				System.exit(Photons.errorCodeFailedToInsertFileInfoInformationIntoDatabase);
 			}
 			
@@ -209,7 +212,7 @@ public class FileInfoDatabase {
 			
 			connection.close();
 		} catch (SQLException e) {
-			MyLogger.displayAndLogException(e);
+			MyLogger.displayAndLogExceptionMessage(e, "addFileImportedInfo failed");
 			System.exit(Photons.errorCodeFailedToInsertFileIntoDatabase);
 		}
 	}
@@ -226,7 +229,7 @@ public class FileInfoDatabase {
 			preparedInsertFileGroupStatement.setString(1, description);
 			preparedInsertFileGroupStatement.setLong(2, new Date().getTime());
 			if (preparedInsertFileGroupStatement.executeUpdate() != 1) {
-				MyLogger.displayAndLogActionMessage("Failed to insert filegroup information [description=%s]", description);
+				MyLogger.displayAndLogErrorMessage("Failed to insert filegroup information [description=%s]", description);
 				System.exit(Photons.errorCodeFailedToInsertFileGroupInformationIntoDatabase);
 			}
 			
@@ -248,7 +251,7 @@ public class FileInfoDatabase {
 			preparedInsertFileGroupAssignmentStatement.setLong(2, fileId);
 			preparedInsertFileGroupAssignmentStatement.setLong(3, new Date().getTime());
 			if (preparedInsertFileGroupAssignmentStatement.executeUpdate() != 1) {
-				MyLogger.displayAndLogActionMessage("Failed to insert filegroup assignment information [groupId=%d] [fileId=%d]", groupId, fileId);
+				MyLogger.displayAndLogErrorMessage("Failed to insert filegroup assignment information [groupId=%d] [fileId=%d]", groupId, fileId);
 				System.exit(Photons.errorCodeFailedToInsertFileGroupAssignmentInformationIntoDatabase);
 			}
 			
@@ -310,7 +313,7 @@ public class FileInfoDatabase {
 			
 			connection.close();
 		} catch (SQLException e) {
-			MyLogger.displayAndLogException(e);
+			MyLogger.displayAndLogExceptionMessage(e, "addSourcePathInfo failed");
 			System.exit(Photons.errorCodeFailedToAddSourcePathInformationToDatabase);
 		}
 	}
@@ -341,7 +344,7 @@ public class FileInfoDatabase {
 			boolean fileImportedInfoWasAlreadyRetrieved = false;
 		    while ( resultSet.next() ) {
 		    	if (fileImportedInfoWasAlreadyRetrieved) {
-		    		MyLogger.displayAndLogActionMessage("ERROR: Duplicate imported file found. [Hash=%s] [Length=%d] [File=%s]", originalFileContentHash, originalFileLength, fileImportedInfo.getOriginalFileNameWithPath());
+		    		MyLogger.displayAndLogErrorMessage("Duplicate imported file found. [Hash=%s] [Length=%d] [File=%s]", originalFileContentHash, originalFileLength, fileImportedInfo.getOriginalFileNameWithPath());
 					System.exit(Photons.errorCodeDuplicateImportedFile);
 		    	}
 		    	
@@ -355,7 +358,7 @@ public class FileInfoDatabase {
 			
 			connection.close();
 		} catch (SQLException e) {
-			MyLogger.displayAndLogException(e);
+			MyLogger.displayAndLogExceptionMessage(e, "getFileImportedInfo failed");
 			System.exit(Photons.errorCodeFailedToGetFileInformationFromDatabase);
 		}
 		

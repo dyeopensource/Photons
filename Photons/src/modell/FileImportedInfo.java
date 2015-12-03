@@ -92,7 +92,7 @@ public class FileImportedInfo {
 			fileImportedInfo.setDeleted(DatabaseUtil.getBooleanFromStringValue(resultSet.getString("deleted")));
 			
 		} catch (SQLException e) {
-			MyLogger.displayException(e);
+			MyLogger.displayAndLogExceptionMessage(e, "getFileImportedInfoFromDatabase failed");
 			return null;
 		}
 		

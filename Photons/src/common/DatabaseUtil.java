@@ -48,7 +48,7 @@ public class DatabaseUtil {
 	    try {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
-			MyLogger.displayAndLogException(e);
+			MyLogger.displayAndLogExceptionMessage(e, "JDBC not found.");
 			System.exit(1);
 		}
 	}

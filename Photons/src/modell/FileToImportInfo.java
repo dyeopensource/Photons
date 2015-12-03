@@ -41,7 +41,7 @@ public class FileToImportInfo {
 
 		this.setUserDate(this.lastModificationTime);
 		
-		MyLogger.displayAndLogActionMessage("Calculated info for [%s]", realPath);
+		MyLogger.displayAndLogDebugMessage("Calculated info for [%s]", realPath);
 	}
 	
 	/**
