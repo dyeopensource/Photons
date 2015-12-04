@@ -12,40 +12,42 @@ import common.MyLogger;
 
 public class Photons {
 	
-	public static int errorCodeImportSourceFolderDoesNotExist = 1;
-	public static int errorCodeImportDestinationFolderDoesNotExist = 2;
-	public static int errorCodeFailedToCreateLogFile = 3;
-	public static int errorCodeLengthMismatch = 4;
-	public static int errorCodeHashMismatch = 5;
-	public static int errorCodeFailedToInsertFileIntoDatabase = 6;
-	public static int errorCodeFailedToAddSourcePathInformationToDatabase = 7;
-	public static int errorCodeFailedToGetFileInformationFromDatabase = 8;
-	public static int errorCodeUnsupportedDatabaseVersion = 9;
-	public static int errorCodeFailedToInsertFileGroupInformationIntoDatabase = 10;
-	public static int errorCodeFailedToInsertFileGroupAssignmentInformationIntoDatabase = 11;
-	public static int errorCodeDuplicateImportedFile = 12;
-	public static int errorCodeFileInsertionVerificationFailed = 13;
-	public static int errorCodeFailedToInsertFileInfoInformationIntoDatabase = 14;
-	public static int errorCodeCommandOrOptionDoesNotExist = 15;
-	public static int errorCodeWrongUsage = 16;
+	public static final int errorCodeImportSourceFolderDoesNotExist = 1;
+	public static final int errorCodeImportDestinationFolderDoesNotExist = 2;
+	public static final int errorCodeFailedToCreateLogFile = 3;
+	public static final int errorCodeLengthMismatch = 4;
+	public static final int errorCodeHashMismatch = 5;
+	public static final int errorCodeFailedToInsertFileIntoDatabase = 6;
+	public static final int errorCodeFailedToAddSourcePathInformationToDatabase = 7;
+	public static final int errorCodeFailedToGetFileInformationFromDatabase = 8;
+	public static final int errorCodeUnsupportedDatabaseVersion = 9;
+	public static final int errorCodeFailedToInsertFileGroupInformationIntoDatabase = 10;
+	public static final int errorCodeFailedToInsertFileGroupAssignmentInformationIntoDatabase = 11;
+	public static final int errorCodeDuplicateImportedFile = 12;
+	public static final int errorCodeFileInsertionVerificationFailed = 13;
+	public static final int errorCodeFailedToInsertFileInfoInformationIntoDatabase = 14;
+	public static final int errorCodeCommandOrOptionDoesNotExist = 15;
+	public static final int errorCodeWrongUsage = 16;
+	public static final int errorCodeFailedToOpenOrCreateDatabase = 17;
+	public static final int errorCodeDatabaseVersionCheckFailure = 18;
 	
-	private static int actionShowUsage = 0;
-	private static int actionShowUI = 1;
-	private static int actionImport = 2;
-	private static int actionVerify = 3;
-	private static int actionCheck = 4;
+	private static final int actionShowUsage = 0;
+	private static final int actionShowUI = 1;
+	private static final int actionImport = 2;
+	private static final int actionVerify = 3;
+	private static final int actionCheck = 4;
 	
-	private static SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyyMMdd-HHmmSS");
+	private static final SimpleDateFormat dateTimeFormatter = new SimpleDateFormat("yyyyMMdd-HHmmSS");
 	
-	private static String commandImport = "import";
-	private static String commandVerify = "verify";
-	private static String commandCheck = "check";
+	private static final String commandImport = "import";
+	private static final String commandVerify = "verify";
+	private static final String commandCheck = "check";
 	
-	private static String argSource = "source";
-	private static String argDestination = "destination";
-	private static String argTypes = "types";
+	private static final String argSource = "source";
+	private static final String argDestination = "destination";
+	private static final String argTypes = "types";
 	
-	private static String usage = "\n"
+	private static final String usage = "\n"
 			+ "Usage:\n"
 			+ "\n"
 			+ "java -jar photons.jar [CommandLineParamaters]\n"

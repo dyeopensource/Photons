@@ -26,7 +26,6 @@ public class FileImportedInfo {
 	private String hash;
 	
 	private Date fileLastModificationTime;
-	private Date mediaContentTimeStamp;
 	private Date userTimeStamp;
 	
 	private String subFolder;
@@ -50,7 +49,6 @@ public class FileImportedInfo {
 		this.length = originalFileInfo.getLength();
 		this.hash = originalFileInfo.getHash();
 		this.fileLastModificationTime = originalFileInfo.getLastModificationTime();
-		this.mediaContentTimeStamp = originalFileInfo.getMediaContentDate();
 		this.userTimeStamp = originalFileInfo.getUserDate();
 		this.subFolder = FileUtil.subfolderDateFormatter.format(this.fileLastModificationTime);
 		this.fileName = originalFileInfo.getFileName();
@@ -81,7 +79,6 @@ public class FileImportedInfo {
 			fileImportedInfo.setLength(resultSet.getLong("originalLength"));
 			fileImportedInfo.setHash(resultSet.getString("originalHash"));
 			fileImportedInfo.setLastModificationTime(new Date(resultSet.getLong("originalLastModificationTime")));
-			fileImportedInfo.setMediaContentTimestamp(new Date(resultSet.getLong("mediaContentTimestamp")));
 			fileImportedInfo.setUserTimestamp(new Date(resultSet.getLong("userTimeStamp")));
 			fileImportedInfo.setSubfolder(resultSet.getString("subFolder"));
 			fileImportedInfo.setFileName(resultSet.getString("fileName"));
@@ -205,14 +202,6 @@ public class FileImportedInfo {
 
 	public void setDeleted(Boolean deleted) {
 		this.deleted = deleted;
-	}
-
-	public Date getMediaContentTimestamp() {
-		return mediaContentTimeStamp;
-	}
-	
-	public void setMediaContentTimestamp(Date mediaContentTimestamp) {
-		this.mediaContentTimeStamp = mediaContentTimestamp;
 	}
 
 	public Date getUserTimestamp() {
