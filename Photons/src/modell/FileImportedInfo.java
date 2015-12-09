@@ -26,7 +26,6 @@ public class FileImportedInfo {
 	private String hash;
 	
 	private Date fileLastModificationTime;
-	private Date userTimeStamp;
 	
 	private String subFolder;
 	private String fileName;
@@ -49,7 +48,6 @@ public class FileImportedInfo {
 		this.length = originalFileInfo.getLength();
 		this.hash = originalFileInfo.getHash();
 		this.fileLastModificationTime = originalFileInfo.getLastModificationTime();
-		this.userTimeStamp = originalFileInfo.getUserDate();
 		this.subFolder = FileUtil.subfolderDateFormatter.format(this.fileLastModificationTime);
 		this.fileName = originalFileInfo.getFileName();
 		
@@ -79,7 +77,6 @@ public class FileImportedInfo {
 			fileImportedInfo.setLength(resultSet.getLong("originalLength"));
 			fileImportedInfo.setHash(resultSet.getString("originalHash"));
 			fileImportedInfo.setLastModificationTime(new Date(resultSet.getLong("originalLastModificationTime")));
-			fileImportedInfo.setUserTimestamp(new Date(resultSet.getLong("userTimeStamp")));
 			fileImportedInfo.setSubfolder(resultSet.getString("subFolder"));
 			fileImportedInfo.setFileName(resultSet.getString("fileName"));
 			fileImportedInfo.setImportEnabled(DatabaseUtil.getBooleanFromStringValue(resultSet.getString("importEnabled")));
@@ -202,13 +199,5 @@ public class FileImportedInfo {
 
 	public void setDeleted(Boolean deleted) {
 		this.deleted = deleted;
-	}
-
-	public Date getUserTimestamp() {
-		return this.userTimeStamp;
-	}
-	
-	public void setUserTimestamp(Date userTimeStamp) {
-		this.userTimeStamp = userTimeStamp;
 	}
 }

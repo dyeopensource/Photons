@@ -25,9 +25,11 @@ public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionStringCurrent = "2.3.2";
+	private static final String versionStringCurrent = "2.3.3";
 	
 	private static final String versionStringOld231 = "2.3.1";
+	private static final String versionStringOld232 = "2.3.2";
+	private static final String versionStringOld233 = "2.3.3";
 	
 	private static final String fieldNameId = "id";
 	
@@ -42,7 +44,9 @@ public class FileInfoDatabase {
 			"deleted											INTEGER		DEFAULT 0)";
 	private static final String configVersionInsertCommandSql = "INSERT INTO " + configTableName + " (key, " + configTableFieldNameValue + ", recordLastModificationTime) " +
 			"VALUES ('version', '" + versionStringCurrent + "', %d)";
-	private static final String configVersionUpdateCommandSql = "UPDATE " + configTableName + " SET " + configTableFieldNameValue + "='" + versionStringCurrent + "' WHERE key='version';"
+	//private static final String configVersionUpdateToCurrentCommandSql = "UPDATE " + configTableName + " SET " + configTableFieldNameValue + "='" + versionStringCurrent + "' WHERE key='version';"
+	//		+ "UPDATE " + configTableName + " SET " + configTableFieldNameRecordLastModificationTime + "=%d;";
+	private static final String configVersionUpdateToOldCommandSql = "UPDATE " + configTableName + " SET " + configTableFieldNameValue + "='%s' WHERE key='version';"
 			+ "UPDATE " + configTableName + " SET " + configTableFieldNameRecordLastModificationTime + "=%d;";
 	private static final String configVersionSelectCommandSql = "SELECT " + configTableFieldNameValue + ", recordLastModificationTime " +
 			"FROM " + configTableName + " WHERE key = 'version' ORDER BY value ASC";
@@ -54,7 +58,6 @@ public class FileInfoDatabase {
 			"originalLength					INTEGER	NOT NULL, " +
 			"originalHash					TEXT	NOT NULL, " +
 			"originalLastModificationTime	INTEGER	NOT NULL, " +
-			"userTimeStamp					INTEGER	NOT NULL, " +
 			"subFolder						TEXT	NOT NULL, " +
 			"fileName						TEXT	NOT NULL, " +
 			"importEnabled					INTEGER	NOT NULL, " +
@@ -64,16 +67,14 @@ public class FileInfoDatabase {
 			"deleted						INTEGER	DEFAULT 0)";
 	private static final String fileInfoInsertCommandSql = "INSERT INTO " + fileInfoTableName + " " +
 			"(originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
-			"userTimeStamp, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
-			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	/**
 	 * SELECT statement to get records from fileinfo table with the specified original hash and size values 
 	 */
 	private static final String selectFileInfoCommandSql = "SELECT " +
 			fieldNameId + ", originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
-			"userTimeStamp, " +
 			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
 			"FROM " + fileInfoTableName + " WHERE originalHash=? AND originalLength=?";
 
@@ -150,20 +151,10 @@ public class FileInfoDatabase {
 						// OK
 						MyLogger.displayAndLogDebugMessage("Database already exists with expected version: [databaseVersion=%s] at [databaseFolder=%s].", databaseVersion, this.databaseFolder);
 					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld231)) {
-						// Upgrading from 2.3.1 to 2.3.2
-						MyLogger.displayAndLogDebugMessage("Database already exists with version: [versionStringOld231=%s] at [databaseFolder=%s]. Upgrading to [versionStringCurrent=%s]", FileInfoDatabase.versionStringOld231, this.databaseFolder, FileInfoDatabase.versionStringCurrent);
-
-						// Removing mediaContentTimeStamp field from fileinfo table:
-						Statement sqlStatement = connection.createStatement();
-						sqlStatement.executeUpdate("create table fileinfo1 as select id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, userTimeStamp, subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted from fileinfo;"
-						+ " drop table fileinfo;"
-						+ " alter table fileinfo1 rename to fileinfo;");
-					      
-						sqlStatement.executeUpdate(String.format(configVersionUpdateCommandSql, DatabaseUtil.getLongTimeStampCurrent()));
-
-						sqlStatement.close();
-			
-						MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld231=%s] to [versionStringCurrent=%s]", FileInfoDatabase.versionStringOld231, FileInfoDatabase.versionStringCurrent);
+						upgradeFrom231to232(connection);
+						upgradeFrom232to233(connection);
+					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld232)) {
+						upgradeFrom232to233(connection);
 					} else {
 						MyLogger.displayAndLogErrorMessage(String.format("Unsupported database version: [databaseVersion=%s] at [databaseFolder=%s].", databaseVersion, this.databaseFolder));
 						System.exit(Photons.errorCodeUnsupportedDatabaseVersion);
@@ -192,6 +183,40 @@ public class FileInfoDatabase {
 	    }
 	}
 
+	private void upgradeFrom231to232(Connection connection) throws SQLException {
+		// Upgrading from 2.3.1 to 2.3.2
+		MyLogger.displayAndLogDebugMessage("Database already exists with version: [versionStringOld231=%s] at [databaseFolder=%s]. Upgrading to [versionStringOld232=%s]", FileInfoDatabase.versionStringOld231, this.databaseFolder, FileInfoDatabase.versionStringOld232);
+
+		// Removing mediaContentTimeStamp field from fileinfo table:
+		Statement sqlStatement = connection.createStatement();
+		sqlStatement.executeUpdate("create table fileinfo1 as select id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, userTimeStamp, subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted from fileinfo;"
+		+ " drop table fileinfo;"
+		+ " alter table fileinfo1 rename to fileinfo;");
+	      
+		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld232, DatabaseUtil.getLongTimeStampCurrent()));
+
+		sqlStatement.close();
+
+		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld231=%s] to [versionStringOld232=%s]", FileInfoDatabase.versionStringOld231, FileInfoDatabase.versionStringOld232);
+	}
+
+	private void upgradeFrom232to233(Connection connection) throws SQLException {
+		// Upgrading from 2.3.2 to 2.3.3
+		MyLogger.displayAndLogDebugMessage("Database already exists with version: [versionStringOld232=%s] at [databaseFolder=%s]. Upgrading to [versionStringOld233=%s]", FileInfoDatabase.versionStringOld232, this.databaseFolder, FileInfoDatabase.versionStringOld233);
+
+		// Removing userTimeStamp field from fileinfo table:
+		Statement sqlStatement = connection.createStatement();
+		sqlStatement.executeUpdate("create table fileinfo1 as select id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted from fileinfo;"
+		+ " drop table fileinfo;"
+		+ " alter table fileinfo1 rename to fileinfo;");
+	      
+		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld233, DatabaseUtil.getLongTimeStampCurrent()));
+
+		sqlStatement.close();
+
+		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld231=%s] to [versionStringOld232=%s]", FileInfoDatabase.versionStringOld232, FileInfoDatabase.versionStringOld233);
+	}
+	
 	/**
 	 * Inserts a new file record into the database
 	 * @param importTargetPath The target folder where the file was copied 
@@ -212,13 +237,12 @@ public class FileInfoDatabase {
 			preparedInsertFileInfoStatement.setLong(2, fileInfo.getLength());
 			preparedInsertFileInfoStatement.setString(3, fileInfo.getHash());
 			preparedInsertFileInfoStatement.setLong(4, fileInfo.getLastModificationTime().getTime());
-			preparedInsertFileInfoStatement.setLong(5, fileInfo.getUserTimestamp().getTime());
-			preparedInsertFileInfoStatement.setString(6, fileInfo.getSubfolder());
-			preparedInsertFileInfoStatement.setString(7, fileInfo.getFileName());
-			preparedInsertFileInfoStatement.setString(8, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
-			preparedInsertFileInfoStatement.setInt(9, fileInfo.getType());
-			preparedInsertFileInfoStatement.setString(10, fileInfo.getDescription());
-			preparedInsertFileInfoStatement.setLong(11, new Date().getTime());
+			preparedInsertFileInfoStatement.setString(5, fileInfo.getSubfolder());
+			preparedInsertFileInfoStatement.setString(6, fileInfo.getFileName());
+			preparedInsertFileInfoStatement.setString(7, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
+			preparedInsertFileInfoStatement.setInt(8, fileInfo.getType());
+			preparedInsertFileInfoStatement.setString(9, fileInfo.getDescription());
+			preparedInsertFileInfoStatement.setLong(10, new Date().getTime());
 			
 			if (preparedInsertFileInfoStatement.executeUpdate() != 1) {
 				MyLogger.displayAndLogErrorMessage("Failed to insert file information [OriginalFileNameWithPath=%s]", fileInfo.getOriginalFileNameWithPath());
