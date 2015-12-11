@@ -41,6 +41,8 @@ public class FileImporter {
 	
 	private Path lastFilePath = null;
 	
+	private Boolean verificationSucceeded;
+	
 	public FileImporter(String pathToImportFrom, String pathToImportTo, String[] fileExtensionsToImport) {
 		this.importSourcePath = Paths.get(pathToImportFrom);
 		this.importTargetPath = Paths.get(pathToImportTo);
@@ -54,6 +56,7 @@ public class FileImporter {
 	
 	public void Import() throws IOException {
 		MyLogger.displayAndLogInformationMessage("Importing files from [%s] to [%s]", this.importSourcePath, this.importTargetPath);
+		
 		this.fileInfoDatabase.openOrCreateDatabase();
 		
 		Files.walkFileTree(this.importSourcePath,
@@ -61,16 +64,43 @@ public class FileImporter {
 				@Override
 				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
 				{
-					FileImporter.this.visitFile(file);
+					FileImporter.this.visitFileForImport(file);
 					return FileVisitResult.CONTINUE;
 				}
 
                 @Override
                 public FileVisitResult visitFileFailed(Path file, IOException e) {
-					MyLogger.displayAndLogExceptionMessage(e, "ERROR: Failed to import file [%s].", file);
+					MyLogger.displayAndLogExceptionMessage(e, "Failed to import file [%s].", file);
                     return FileVisitResult.SKIP_SUBTREE;
                 }
 			});
+		}
+
+	public Boolean Verify() throws IOException {
+		MyLogger.displayAndLogInformationMessage("Verifying import from [%s] to [%s]", this.importSourcePath, this.importTargetPath);
+		
+		verificationSucceeded = true;
+		
+		this.fileInfoDatabase.openOrCreateDatabase();
+		
+		Files.walkFileTree(this.importSourcePath,
+			new SimpleFileVisitor<Path>() {
+				@Override
+				public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) 
+				{
+					FileImporter.this.visitFileForVerification(file);
+					return FileVisitResult.CONTINUE;
+				}
+
+                @Override
+                public FileVisitResult visitFileFailed(Path file, IOException e) {
+					MyLogger.displayAndLogExceptionMessage(e, "Failed to verify file [%s].", file);
+                    return FileVisitResult.SKIP_SUBTREE;
+                }
+			});
+		
+		return verificationSucceeded;
+		
 		}
 
 	/**
@@ -79,7 +109,7 @@ public class FileImporter {
 	 *  
 	 * @param file The file checked
 	 */
-	private void visitFile(Path file) {
+	private void visitFileForImport(Path file) {
 
 		if (!fileExtensionFits(file)) {
 			return;
@@ -94,7 +124,7 @@ public class FileImporter {
 				MyLogger.displayInformationMessage("Importing from [%s]...", lastFilePath);
 			}
 		} catch (Exception e) {
-			MyLogger.displayAndLogExceptionMessage(e, "ERROR: Failed to import file [%s].", file);
+			MyLogger.displayAndLogExceptionMessage(e, "Failed to import files in [%s].", file);
 			// TODO: should we exit?
 		}
 
@@ -130,10 +160,10 @@ public class FileImporter {
 				copyFile = true;
 			} else {
 				// File was already imported
-				MyLogger.displayDebugMessage("FileInfo in the database with the same hash and size already exists.", targetPath);
-				MyLogger.displayAndLogInformationMessage("MATCH: DB: [%s] Import: [%s]", Paths.get(importTargetPath.toString(), existingFileImportedInfo.getSubfolder(), existingFileImportedInfo.getFileName()), file);
+				Path importedFilePath = Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString());
+				MyLogger.displayAndLogInformationMessage("MATCH: DB: [%s] Import: [%s]", importedFilePath, file);
 				// Checking if imported file exists
-				if (!Files.exists(Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString()))) {
+				if (!Files.exists(importedFilePath)) {
 					// Imported file does not exist
 					if (!existingFileImportedInfo.getImportEnabled()) {
 						// ImportEnabled flag is set to false - it was deleted intentionally, no reimport
@@ -161,6 +191,7 @@ public class FileImporter {
 			}
 			
 			// Saving file information into database
+			Boolean groupInfoWasAdded = false;
 			if (addNewFileInfo) {
 				fileInfoDatabase.addFileImportedInfo(importTargetPath.toString(), fileImportedInfo);
 				
@@ -173,14 +204,107 @@ public class FileImporter {
 					System.exit(Photons.errorCodeFileInsertionVerificationFailed);
 				}
 			} else {
-				fileInfoDatabase.addSourcePathInfo(fileImportedInfo, existingFileImportedInfo);
+				groupInfoWasAdded = fileInfoDatabase.addSourcePathInfo(fileImportedInfo, existingFileImportedInfo);
 			}
 			
 			// Success
-			MyLogger.displayAndLogInformationMessage("File imported from: [%s] to [%s].", file, targetPath);
+			if (copyFile || addNewFileInfo || groupInfoWasAdded) {
+				MyLogger.displayAndLogInformationMessage("File imported from: [%s] to [%s].", file, targetPath);
+			}
 		} catch (Exception e) {
-			MyLogger.displayAndLogExceptionMessage(e, "ERROR: Failed to import file [%s].", file);
+			MyLogger.displayAndLogExceptionMessage(e, "Failed to import file [%s].", file);
 			// TODO: should we exit?
+		}
+	}
+
+	/**
+	 * Checks if a file is subject for importing (extension fits) and if it was imported correctly, i.e.
+	 * - File information is found with the same length and hash
+	 * - If the importEnabled flag is set to true, then check:
+	 * - if the file exists, has the same (original) length and hash as the one to be imported (the same as in the database)
+	 * - there is a group for the verified file's source path and the imported file is assigned to it 
+	 * @param file The file checked
+	 */
+	private void visitFileForVerification(Path file) {
+
+		Boolean success = true;
+		if (!fileExtensionFits(file)) {
+			return;
+		}
+		
+		try {
+			Path filePath = file.toRealPath(LinkOption.NOFOLLOW_LINKS).getParent();
+			if (!filePath.equals(lastFilePath)) {
+				lastFilePath = filePath;
+				MyLogger.displayInformationMessage("Verifying files in [%s]...", lastFilePath);
+			}
+		} catch (Exception e) {
+			MyLogger.displayAndLogExceptionMessage(e, "Failed to verify files in folder [%s].", file);
+			// TODO: should we exit?
+		}
+
+		try {
+			// Data based on the source file
+			FileToImportInfo fileToImportInfo = new FileToImportInfo(file);
+			
+			// Creating data for database, based on the original file data
+			FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo);
+			
+			FileImportedInfo existingFileImportedInfo = null;
+			// Retrieving imported file info
+			existingFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
+					fileImportedInfo.getHash(),
+					fileImportedInfo.getLength());
+			// Checking if the imported file exists
+			if (existingFileImportedInfo == null) {
+				MyLogger.displayAndLogErrorMessage("File does not exist in database with [length=%d] [hash=%s]", fileToImportInfo.getLength(), fileToImportInfo.getHash());
+				success = false;
+			} else {
+				// File was already imported
+				Path importedFilePath = Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString());
+				MyLogger.displayAndLogInformationMessage("MATCH: DB: [%s] Import: [%s]", importedFilePath, file);
+				// Checking if imported file exists
+				if (!Files.exists(importedFilePath)) {
+					// Imported file does not exist
+					if (!existingFileImportedInfo.getImportEnabled()) {
+						// ImportEnabled flag is set to false - it was deleted intentionally, no reimport
+						MyLogger.displayAndLogDebugMessage("Skipping...");
+						return;
+					} else {
+						MyLogger.displayAndLogErrorMessage("File does not exist in database [path=%s]", importedFilePath);
+						success = false;
+					}
+				} else {
+					// Check file against stored data
+					FileToImportInfo importedFile = new FileToImportInfo(importedFilePath);
+					if (importedFile.getLength() != fileToImportInfo.getLength()) {
+						MyLogger.displayAndLogErrorMessage("Length mismatch. Source file [length=%d] Imported file [length=%d]", importedFile.getLength(), fileToImportInfo.getLength());
+						success = false;
+					}
+					
+					if (!importedFile.getHash().equals(fileToImportInfo.getHash())) {
+						MyLogger.displayAndLogErrorMessage("Hash mismatch. Source file [hash=%s] Imported file [hash=%s]", importedFile.getHash(), fileToImportInfo.getHash());
+						success = false;
+					}
+				}
+			}
+			
+			// Checking group information in the database
+			if (!fileInfoDatabase.verifySourcePathInfo(fileToImportInfo, existingFileImportedInfo)) {
+				MyLogger.displayAndLogErrorMessage("Source path check failure. [file=%s]", file);
+				success = false;
+			}
+			
+			// Success
+			MyLogger.displayAndLogDebugMessage("File verified: [%s]", file);
+		} catch (Exception e) {
+			MyLogger.displayAndLogExceptionMessage(e, "Failed to verify file [%s].", file);
+			// TODO: should we exit?
+			success = false;
+		}
+		
+		if (!success) {
+			verificationSucceeded = false;
 		}
 	}
 	

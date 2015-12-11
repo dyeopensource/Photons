@@ -105,7 +105,7 @@ public class FileImportedInfo {
 		return this.originalFileNameWithPath;
 	}
 
-	public String getFilePath() {
+	public String getOriginalFilePath() {
 		return this.originalFilePath;
 	}
 	

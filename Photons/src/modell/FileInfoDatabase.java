@@ -251,6 +251,7 @@ public class FileInfoDatabase {
 			
 			preparedInsertFileInfoStatement.close();
 
+			// Note: return value is not checked for storeFileGroupInformation 
 			storeFileGroupInformation(connection, fileInfo, null);
 			
 			//connection.commit(); // If a transaction is necessary
@@ -262,25 +263,29 @@ public class FileInfoDatabase {
 		}
 	}
 	
-	private void storeFileGroupInformation(Connection connection, FileImportedInfo fileInfo, FileImportedInfo existingFileImportedInfo) throws SQLException {
+	private Boolean storeFileGroupInformation(Connection connection, FileImportedInfo fileInfo, FileImportedInfo existingFileImportedInfo) throws SQLException {
 		
-		String description = fileInfo.getFilePath();
+		Boolean databaseWasChanged = false;
 		
-		long groupId = getFileGroupId(connection, description);
+		String groupName = fileInfo.getOriginalFilePath();
+		
+		long groupId = getFileGroupId(connection, groupName);
 
 		if (groupId == DatabaseUtil.idNotSetValue) {
 			// File group does not exist - inserting new
 			PreparedStatement preparedInsertFileGroupStatement = connection.prepareStatement(fileGroupInsertCommandSql);
-			preparedInsertFileGroupStatement.setString(1, description);
+			preparedInsertFileGroupStatement.setString(1, groupName);
 			preparedInsertFileGroupStatement.setLong(2, new Date().getTime());
 			if (preparedInsertFileGroupStatement.executeUpdate() != 1) {
-				MyLogger.displayAndLogErrorMessage("Failed to insert filegroup information [description=%s]", description);
+				MyLogger.displayAndLogErrorMessage("Failed to insert filegroup information [description=%s]", groupName);
 				System.exit(Photons.errorCodeFailedToInsertFileGroupInformationIntoDatabase);
 			}
 			
 			preparedInsertFileGroupStatement.close();
 			
-			groupId = getFileGroupId(connection, description);
+			databaseWasChanged = true;
+			
+			groupId = getFileGroupId(connection, groupName);
 		}
 
 		long fileId = DatabaseUtil.idNotSetValue;
@@ -301,7 +306,11 @@ public class FileInfoDatabase {
 			}
 			
 			preparedInsertFileGroupAssignmentStatement.close();
+			
+			databaseWasChanged = true;
 		}
+		
+		return databaseWasChanged;
 	}
 	
 	private long getFileGroupId(Connection connection, String description) throws SQLException {
@@ -345,14 +354,15 @@ public class FileInfoDatabase {
 		return assignmentId;
 	}
 	
-	public void addSourcePathInfo(FileImportedInfo fileImportedInfo, FileImportedInfo existingFileImportedInfo) {
+	public Boolean addSourcePathInfo(FileImportedInfo fileImportedInfo, FileImportedInfo existingFileImportedInfo) {
+		Boolean databaseWasChanged = false;
 		Connection connection;
 		try {
 			connection = DriverManager.getConnection(this.connectionString);
 			
 			//connection.setAutoCommit(false); // If running multiple actions in a transaction
 			
-			storeFileGroupInformation(connection, fileImportedInfo, existingFileImportedInfo);
+			databaseWasChanged = storeFileGroupInformation(connection, fileImportedInfo, existingFileImportedInfo);
 			
 			//connection.commit(); // If a transaction is necessary
 			
@@ -361,6 +371,33 @@ public class FileInfoDatabase {
 			MyLogger.displayAndLogExceptionMessage(e, "addSourcePathInfo failed");
 			System.exit(Photons.errorCodeFailedToAddSourcePathInformationToDatabase);
 		}
+		
+		return databaseWasChanged;
+	}
+	
+	public Boolean verifySourcePathInfo(FileToImportInfo fileToImportInfo, FileImportedInfo existingFileImportedInfo) {
+		Boolean groupExistsInDatabase = false;
+		Connection connection;
+		try {
+			connection = DriverManager.getConnection(this.connectionString);
+			
+			//connection.setAutoCommit(false); // If running multiple actions in a transaction
+			
+			String groupName = fileToImportInfo.getFilePath();
+			
+			long groupId = getFileGroupId(connection, groupName);
+
+			groupExistsInDatabase = (groupId != DatabaseUtil.idNotSetValue);
+			
+			//connection.commit(); // If a transaction is necessary
+			
+			connection.close();
+		} catch (SQLException e) {
+			MyLogger.displayAndLogExceptionMessage(e, "addSourcePathInfo failed");
+			System.exit(Photons.errorCodeFailedToAddSourcePathInformationToDatabase);
+		}
+		
+		return groupExistsInDatabase;
 	}
 	
 	/**

@@ -112,9 +112,16 @@ public class Photons {
 				MyLogger.displayAndLogExceptionMessage(e, "Import failed");
 			}
 		} else if (Photons.action == Photons.actionVerify) {
-			// TODO: implement
-			MyLogger.displayAndLogErrorMessage("Command [%s] is not implemented yet.", Photons.command);
-			Photons.errorCode = errorCodeCommandOrOptionDoesNotExist;
+			FileImporter fileImporter = new FileImporter(Photons.sourcePath, Photons.destinationPath, Photons.types);
+			try {
+				if (fileImporter.Verify()) {
+					MyLogger.displayAndLogInformationMessage("Verification success.");
+				} else {
+					MyLogger.displayAndLogErrorMessage("Verification failed.");
+				}
+			} catch (IOException e) {
+				MyLogger.displayAndLogExceptionMessage(e, "Import failed");
+			}
 		} else if (Photons.action == Photons.actionCheck) {
 			// TODO: implement
 			MyLogger.displayAndLogErrorMessage("Command [%s] is not implemented yet.", Photons.command);
