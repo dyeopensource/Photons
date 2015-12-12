@@ -30,6 +30,7 @@ public class FileToImportInfo {
 	 * @throws Exception
 	 */
 	public FileToImportInfo(Path path) throws Exception {
+		
 		Path realPath = path.toRealPath(LinkOption.NOFOLLOW_LINKS);
 		this.filePath = realPath.getParent().toString();
 		setFileData(realPath);

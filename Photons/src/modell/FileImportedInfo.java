@@ -32,14 +32,14 @@ public class FileImportedInfo {
 	
 	private Boolean importEnabled;
 	
-	private int type;
+	private long type;
 	private String description;
 	
 	private long id;
 	private Date recordLastModificationTime;
 	private boolean deleted;
 
-	public FileImportedInfo(FileToImportInfo originalFileInfo) {
+	public FileImportedInfo(FileToImportInfo originalFileInfo, long fileTypeId) {
 		this.id = DatabaseUtil.idNotSetValue;
 		
 		this.originalFileNameWithPath = originalFileInfo.getFileNameWithPath();
@@ -53,12 +53,7 @@ public class FileImportedInfo {
 		
 		this.importEnabled = true;
 		
-		if (this.originalFileNameWithPath.toLowerCase().endsWith(".jpg")) {
-			this.type = 1;
-		}
-		else {
-			this.type = 0;
-		}
+		this.type = fileTypeId;
 		
 		this.description = "";
 		
@@ -153,11 +148,11 @@ public class FileImportedInfo {
 		this.importEnabled = importEnabled;
 	}
 
-	public int getType() {
+	public long getType() {
 		return this.type;
 	}
 
-	private void setType(int type) {
+	private void setType(long type) {
 		this.type = type;
 	}
 

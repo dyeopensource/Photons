@@ -25,11 +25,12 @@ public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionStringCurrent = "2.3.3";
+	private static final String versionStringCurrent = "2.3.4";
 	
 	private static final String versionStringOld231 = "2.3.1";
 	private static final String versionStringOld232 = "2.3.2";
 	private static final String versionStringOld233 = "2.3.3";
+	private static final String versionStringOld234 = "2.3.4";
 	
 	private static final String fieldNameId = "id";
 	
@@ -90,7 +91,7 @@ public class FileInfoDatabase {
 			"VALUES (?, ?)";
 	private static final String selectFileGroupCommandSql = "SELECT " +
 			fieldNameId + ", " + fileGroupTableFieldNameDescription + ", recordLastModificationTime, deleted " +
-			"FROM " + fileGroupTableName + " WHERE description=?";
+			"FROM " + fileGroupTableName + " WHERE " + fileGroupTableFieldNameDescription + "=?";
 
 	private static final String fileGroupAssignmentTableName = "filegroupassignment";
 	private static final String fileGroupAssignmentTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileGroupAssignmentTableName + " " +
@@ -105,6 +106,20 @@ public class FileInfoDatabase {
 	private static final String selectFileGroupAssignmentCommandSql = "SELECT " +
 			fieldNameId + ", groupid, fileid, recordLastModificationTime, deleted " +
 			"FROM " + fileGroupAssignmentTableName + " WHERE groupid=? AND fileid=?";
+
+	private static final String fileTypeTableName = "filetype";
+	private static final String fileTypeTableFieldNameExtension = "extension";
+	private static final String fileTypeTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileTypeTableName + " " +
+			"(" + fieldNameId + "					INTEGER	PRIMARY KEY, " +
+			fileTypeTableFieldNameExtension + 	"	TEXT	NOT NULL, " +
+			"recordLastModificationTime				INTEGER	NOT NULL, " +
+			"deleted								INTEGER	DEFAULT 0)";
+	private static final String fileTypeInsertCommandSql = "INSERT INTO " + fileTypeTableName + " " +
+			"(" + fileTypeTableFieldNameExtension + ", recordLastModificationTime) " +
+			"VALUES (?, ?)";
+	private static final String selectFileTypeCommandSql = "SELECT " +
+			fieldNameId + ", " + fileTypeTableFieldNameExtension + ", recordLastModificationTime, deleted " +
+			"FROM " + fileTypeTableName + " WHERE " + fileTypeTableFieldNameExtension + "=?";
 	
 	private Path databaseFolder;
 	private Path databaseFilePath;
@@ -153,8 +168,12 @@ public class FileInfoDatabase {
 					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld231)) {
 						upgradeFrom231to232(connection);
 						upgradeFrom232to233(connection);
+						upgradeFrom233to234(connection);
 					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld232)) {
 						upgradeFrom232to233(connection);
+						upgradeFrom233to234(connection);
+					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld233)) {
+						upgradeFrom233to234(connection);
 					} else {
 						MyLogger.displayAndLogErrorMessage(String.format("Unsupported database version: [databaseVersion=%s] at [databaseFolder=%s].", databaseVersion, this.databaseFolder));
 						System.exit(Photons.errorCodeUnsupportedDatabaseVersion);
@@ -170,6 +189,7 @@ public class FileInfoDatabase {
 				sqlStatement.executeUpdate(fileInfoTableCreationCommandSql);
 				sqlStatement.executeUpdate(fileGroupTableCreationCommandSql);
 				sqlStatement.executeUpdate(fileGroupAssignmentTableCreationCommandSql);
+				sqlStatement.executeUpdate(fileTypeTableCreationCommandSql);
 			      
 				sqlStatement.close();
 	
@@ -214,7 +234,28 @@ public class FileInfoDatabase {
 
 		sqlStatement.close();
 
-		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld231=%s] to [versionStringOld232=%s]", FileInfoDatabase.versionStringOld232, FileInfoDatabase.versionStringOld233);
+		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld232=%s] to [versionStringOld233=%s]", FileInfoDatabase.versionStringOld232, FileInfoDatabase.versionStringOld233);
+	}
+
+	private void upgradeFrom233to234(Connection connection) throws SQLException {
+		// Upgrading from 2.3.3 to 2.3.4
+		MyLogger.displayAndLogDebugMessage("Database already exists with version: [versionStringOld233=%s] at [databaseFolder=%s]. Upgrading to [versionStringOld234=%s]", FileInfoDatabase.versionStringOld233, this.databaseFolder, FileInfoDatabase.versionStringOld234);
+
+		// Creating filetype table
+		Statement sqlStatement = connection.createStatement();
+		sqlStatement.executeUpdate(fileTypeTableCreationCommandSql);
+
+		sqlStatement.close();
+		
+		// Inserting JPG type with ID 1
+		String jpgTypeName = "jpg";
+		long jpgTypeId = getOrCreateFileTypeId(connection, jpgTypeName);
+		if (jpgTypeId != 1) {
+			MyLogger.displayAndLogErrorMessage("id of filetype [type=%s] is not 1.", jpgTypeName);
+			System.exit(Photons.errorCodeFailedToInsertFileTypeInformationIntoDatabase);
+		}
+
+		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld233=%s] to [versionStringOld234=%s]", FileInfoDatabase.versionStringOld233, FileInfoDatabase.versionStringOld234);
 	}
 	
 	/**
@@ -240,7 +281,7 @@ public class FileInfoDatabase {
 			preparedInsertFileInfoStatement.setString(5, fileInfo.getSubfolder());
 			preparedInsertFileInfoStatement.setString(6, fileInfo.getFileName());
 			preparedInsertFileInfoStatement.setString(7, DatabaseUtil.getStringFromBoolValue(fileInfo.getImportEnabled()));
-			preparedInsertFileInfoStatement.setInt(8, fileInfo.getType());
+			preparedInsertFileInfoStatement.setLong(8, fileInfo.getType());
 			preparedInsertFileInfoStatement.setString(9, fileInfo.getDescription());
 			preparedInsertFileInfoStatement.setLong(10, new Date().getTime());
 			
@@ -322,7 +363,7 @@ public class FileInfoDatabase {
 		fileGroupQueryStatement.setString(1, description);
 		
 		ResultSet fileGroupQueryResultSet = fileGroupQueryStatement.executeQuery();
-		while ( fileGroupQueryResultSet.next() ) {
+		if ( fileGroupQueryResultSet.next() ) {
 			groupId = fileGroupQueryResultSet.getInt(fieldNameId);
 		}
 		
@@ -331,6 +372,64 @@ public class FileInfoDatabase {
 		fileGroupQueryStatement.close();
 		
 		return groupId;
+	}
+	
+	private long getFileTypeId(Connection connection, String type) throws SQLException {
+		
+		long fileTypeId = DatabaseUtil.idNotSetValue;
+		
+		PreparedStatement fileTypeQueryStatement = connection.prepareStatement(selectFileTypeCommandSql);
+		
+		fileTypeQueryStatement.setString(1, type);
+		
+		ResultSet fileTypeQueryResultSet = fileTypeQueryStatement.executeQuery();
+		if ( fileTypeQueryResultSet.next() ) {
+			fileTypeId = fileTypeQueryResultSet.getInt(fieldNameId);
+		}
+		
+		fileTypeQueryResultSet.close();
+
+		fileTypeQueryStatement.close();
+		
+		return fileTypeId;
+	}
+	
+	public long getOrCreateFileTypeId(String type) {
+		
+		long fileTypeId = DatabaseUtil.idNotSetValue;
+		try {
+			
+		    Connection connection = DriverManager.getConnection(this.connectionString);
+			
+		    fileTypeId = getOrCreateFileTypeId(connection, type);
+		    
+		    connection.close();
+		} catch (Exception e) {
+			MyLogger.displayAndLogExceptionMessage(e, "Error when getting ID for file type [%s]", type);
+			System.exit(Photons.errorCodeFailedToInsertFileTypeInformationIntoDatabase);
+		}
+	    
+	    return fileTypeId;
+	}
+		
+	private long getOrCreateFileTypeId(Connection connection, String type) throws SQLException {
+		
+		long fileTypeId = getFileTypeId(connection, type);
+		
+		if (fileTypeId == DatabaseUtil.idNotSetValue) {
+			// File type does not exist - inserting new
+			PreparedStatement preparedInsertFileTypeStatement = connection.prepareStatement(fileTypeInsertCommandSql);
+			preparedInsertFileTypeStatement.setString(1, type);
+			preparedInsertFileTypeStatement.setLong(2, new Date().getTime());
+			if (preparedInsertFileTypeStatement.executeUpdate() != 1) {
+				MyLogger.displayAndLogErrorMessage("Failed to insert filetype information [type=%s]", type);
+				System.exit(Photons.errorCodeFailedToInsertFileTypeInformationIntoDatabase);
+			}
+			
+			fileTypeId = getFileTypeId(connection, type);
+		}
+		
+		return fileTypeId;
 	}
 	
 	private long getFileGroupAssignmentId(Connection connection, long groupId, long fileId) throws SQLException {

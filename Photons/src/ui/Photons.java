@@ -30,6 +30,8 @@ public class Photons {
 	public static final int errorCodeWrongUsage = 16;
 	public static final int errorCodeFailedToOpenOrCreateDatabase = 17;
 	public static final int errorCodeDatabaseVersionCheckFailure = 18;
+	public static final int errorCodeFailedToInsertFileTypeInformationIntoDatabase = 19;
+	public static final int errorCodeFailedToGetFileTypeInformation = 20;
 	
 	private static final int actionShowUsage = 0;
 	private static final int actionShowUI = 1;
@@ -55,7 +57,7 @@ public class Photons {
 			+ "Command line parameters:\n"
 			+ "\n"
 			+ "import /source=<SourcePath> /destination=<DestinationPath> /types=<Types>\n"
-			+ "verify /source=<SourcePath> /destination=<DestinationPath> /types=<Type>\n"
+			+ "verify /source=<SourcePath> /destination=<DestinationPath> /types=<Types>\n"
 			+ "check /destination=<DestinationPath>\n"
 			+ "\n"
 			+ "Example:\n"
@@ -75,9 +77,6 @@ public class Photons {
 	
 	private static int action = actionShowUsage;
 	private static int errorCode = 0;
-	
-	// TODO: introduce and implement verify command (check imported folder and database consistency)
-	// this could be called also CheckConsistency (but it is a bit long)
 	
 	// TODO: introduce command: fillmediatimestamp (this would analyse EXIF information etc. - update database information)
 	

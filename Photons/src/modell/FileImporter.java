@@ -9,6 +9,7 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.HashMap;
 
 import common.FileUtil;
 import common.MyLogger;
@@ -36,6 +37,7 @@ public class FileImporter {
 	 * The lower case file extension which should be used for importing files
 	 */
 	private String[] fileExtensionsToImportLowerCase;
+	private HashMap<String, Long> fileTypeMap = new HashMap<String, Long>();
 	
 	private FileInfoDatabase fileInfoDatabase;
 	
@@ -46,18 +48,23 @@ public class FileImporter {
 	public FileImporter(String pathToImportFrom, String pathToImportTo, String[] fileExtensionsToImport) {
 		this.importSourcePath = Paths.get(pathToImportFrom);
 		this.importTargetPath = Paths.get(pathToImportTo);
-		this.fileExtensionsToImportLowerCase = new String[fileExtensionsToImport.length];
-		for(int i = 0; i < fileExtensionsToImport.length; i++) {
-			this.fileExtensionsToImportLowerCase[i] = fileExtensionsToImport[i].toLowerCase();
-		}
 		
 		this.fileInfoDatabase = new FileInfoDatabase(this.importTargetPath);
+		this.fileInfoDatabase.openOrCreateDatabase();
+
+		this.fileExtensionsToImportLowerCase = new String[fileExtensionsToImport.length];
+		for(int i = 0; i < fileExtensionsToImport.length; i++) {
+			String typeName = fileExtensionsToImport[i].toLowerCase();
+			
+			long typeId = fileInfoDatabase.getOrCreateFileTypeId(typeName);
+			fileTypeMap.put(typeName, typeId);
+
+			this.fileExtensionsToImportLowerCase[i] = "." + typeName;
+		}
 	}
 	
 	public void Import() throws IOException {
 		MyLogger.displayAndLogInformationMessage("Importing files from [%s] to [%s]", this.importSourcePath, this.importTargetPath);
-		
-		this.fileInfoDatabase.openOrCreateDatabase();
 		
 		Files.walkFileTree(this.importSourcePath,
 			new SimpleFileVisitor<Path>() {
@@ -111,10 +118,11 @@ public class FileImporter {
 	 */
 	private void visitFileForImport(Path file) {
 
-		if (!fileExtensionFits(file)) {
+		Long fileTypeId = getFileTypeIdFromHashMap(file);
+		if (fileTypeId == null) {
 			return;
 		}
-		
+
 		// Display the progress
 		//MyLogger.displayAndLogActionMessage("Importing file [%s]...", file);
 		try {
@@ -134,7 +142,7 @@ public class FileImporter {
 			FileToImportInfo fileToImportInfo = new FileToImportInfo(file);
 			
 			// Creating data for database, based on the original file data
-			FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo);
+			FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo, fileTypeId);
 			
 			Path targetFolder = Paths.get(importTargetPath.toString(), fileImportedInfo.getSubfolder());
 			Path targetPath = Paths.get(targetFolder.toString(), fileImportedInfo.getFileName());
@@ -228,7 +236,8 @@ public class FileImporter {
 	private void visitFileForVerification(Path file) {
 
 		Boolean success = true;
-		if (!fileExtensionFits(file)) {
+		Long fileTypeId = getFileTypeIdFromHashMap(file);
+		if (fileTypeId == null) {
 			return;
 		}
 		
@@ -248,7 +257,7 @@ public class FileImporter {
 			FileToImportInfo fileToImportInfo = new FileToImportInfo(file);
 			
 			// Creating data for database, based on the original file data
-			FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo);
+			FileImportedInfo fileImportedInfo = new FileImportedInfo(fileToImportInfo, fileTypeId);
 			
 			FileImportedInfo existingFileImportedInfo = null;
 			// Retrieving imported file info
@@ -263,28 +272,34 @@ public class FileImporter {
 				// File was already imported
 				Path importedFilePath = Paths.get(importTargetPath.toString(), existingFileImportedInfo.getCurrentRelativePathWithFileName().toString());
 				MyLogger.displayAndLogInformationMessage("MATCH: DB: [%s] Import: [%s]", importedFilePath, file);
-				// Checking if imported file exists
-				if (!Files.exists(importedFilePath)) {
-					// Imported file does not exist
-					if (!existingFileImportedInfo.getImportEnabled()) {
-						// ImportEnabled flag is set to false - it was deleted intentionally, no reimport
-						MyLogger.displayAndLogDebugMessage("Skipping...");
-						return;
-					} else {
-						MyLogger.displayAndLogErrorMessage("File does not exist in database [path=%s]", importedFilePath);
-						success = false;
-					}
+				// Check if file type was assigned correctly
+				if (fileTypeId != existingFileImportedInfo.getType()) {
+					MyLogger.displayAndLogErrorMessage("File type mismatch [fileTypeId=%d] [existingFileImportedInfo.getType=%d]", fileTypeId, existingFileImportedInfo.getType());
+					success = false;
 				} else {
-					// Check file against stored data
-					FileToImportInfo importedFile = new FileToImportInfo(importedFilePath);
-					if (importedFile.getLength() != fileToImportInfo.getLength()) {
-						MyLogger.displayAndLogErrorMessage("Length mismatch. Source file [length=%d] Imported file [length=%d]", importedFile.getLength(), fileToImportInfo.getLength());
-						success = false;
-					}
-					
-					if (!importedFile.getHash().equals(fileToImportInfo.getHash())) {
-						MyLogger.displayAndLogErrorMessage("Hash mismatch. Source file [hash=%s] Imported file [hash=%s]", importedFile.getHash(), fileToImportInfo.getHash());
-						success = false;
+					// Checking if imported file exists
+					if (!Files.exists(importedFilePath)) {
+						// Imported file does not exist
+						if (!existingFileImportedInfo.getImportEnabled()) {
+							// ImportEnabled flag is set to false - it was deleted intentionally, no reimport
+							MyLogger.displayAndLogDebugMessage("Skipping...");
+							return;
+						} else {
+							MyLogger.displayAndLogErrorMessage("File does not exist in database [path=%s]", importedFilePath);
+							success = false;
+						}
+					} else {
+						// Check file against stored data
+						FileToImportInfo importedFile = new FileToImportInfo(importedFilePath);
+						if (importedFile.getLength() != fileToImportInfo.getLength()) {
+							MyLogger.displayAndLogErrorMessage("Length mismatch. Source file [length=%d] Imported file [length=%d]", importedFile.getLength(), fileToImportInfo.getLength());
+							success = false;
+						}
+						
+						if (!importedFile.getHash().equals(fileToImportInfo.getHash())) {
+							MyLogger.displayAndLogErrorMessage("Hash mismatch. Source file [hash=%s] Imported file [hash=%s]", importedFile.getHash(), fileToImportInfo.getHash());
+							success = false;
+						}
 					}
 				}
 			}
@@ -308,23 +323,6 @@ public class FileImporter {
 		}
 	}
 	
-	/**
-	 * Checks if the file has the expected extension 
-	 * @param file The file to be checked
-	 * @return True if the file has the expected extension (ignoring case), false otherwise
-	 */
-	private Boolean fileExtensionFits(Path file) {
-		
-		for (int i = 0; i < this.fileExtensionsToImportLowerCase.length; i++) {
-			if (file.toString().toLowerCase().endsWith(this.fileExtensionsToImportLowerCase[i])) {
-				return true;
-			}
-		}
-
-		//MyLogger.displayActionMessage("Ignoring file because of file type mismatch [%s].", file);
-
-		return false;
-	}
 	
 	private void CopyFileToTargetPathWithVerification(
 			Path file,
@@ -347,6 +345,7 @@ public class FileImporter {
 		MyLogger.displayAndLogDebugMessage("Copy verified, success.");
 	}
 	
+
 	private Boolean fileCopySuccess(
 			Path file,
 			FileImportedInfo fileImportedInfo,
@@ -363,5 +362,19 @@ public class FileImporter {
 		}
 		
 		return true;
+	}
+	
+	private Long getFileTypeIdFromHashMap(Path file) {
+
+		String[] fileNameParts = file.toString().split("\\.");
+		int partCount = fileNameParts.length;
+		if (partCount < 2) {
+			// No file extension
+			return null;
+		}
+		
+		String extensionLowerCase = fileNameParts[partCount - 1].toLowerCase();
+		Long fileTypeId = fileTypeMap.get(extensionLowerCase);
+		return fileTypeId;
 	}
 }
