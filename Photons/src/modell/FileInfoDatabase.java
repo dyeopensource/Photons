@@ -252,8 +252,6 @@ public class FileInfoDatabase {
 		// Creating filetype table
 		Statement sqlStatement = connection.createStatement();
 		sqlStatement.executeUpdate(fileTypeTableCreationCommandSql);
-
-		sqlStatement.close();
 		
 		// Inserting JPG type with ID 1
 		String jpgTypeName = "jpg";
@@ -262,6 +260,10 @@ public class FileInfoDatabase {
 			MyLogger.displayAndLogErrorMessage("id of filetype [type=%s] is not 1.", jpgTypeName);
 			System.exit(Photons.errorCodeFailedToInsertFileTypeInformationIntoDatabase);
 		}
+
+		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld234, DatabaseUtil.getLongTimeStampCurrent()));
+		
+		sqlStatement.close();
 
 		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld233=%s] to [versionStringOld234=%s]", FileInfoDatabase.versionStringOld233, FileInfoDatabase.versionStringOld234);
 	}
@@ -274,7 +276,7 @@ public class FileInfoDatabase {
 		Statement sqlStatement = connection.createStatement();
 		sqlStatement.executeUpdate("alter table '" + fileGroupTableName + "' add column '" + fileGroupTableFieldNameAuto + "' text default 'y' not null;");
 	      
-		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld232, DatabaseUtil.getLongTimeStampCurrent()));
+		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld235, DatabaseUtil.getLongTimeStampCurrent()));
 
 		sqlStatement.close();
 
