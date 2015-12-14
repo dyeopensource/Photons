@@ -25,12 +25,13 @@ public class FileInfoDatabase {
 
 	private static final String defaultDatabaseFileName = "fileInfo.sqlite";
 
-	private static final String versionStringCurrent = "2.3.4";
+	private static final String versionStringCurrent = "2.3.5";
 	
 	private static final String versionStringOld231 = "2.3.1";
 	private static final String versionStringOld232 = "2.3.2";
 	private static final String versionStringOld233 = "2.3.3";
 	private static final String versionStringOld234 = "2.3.4";
+	private static final String versionStringOld235 = "2.3.5";
 	
 	private static final String fieldNameId = "id";
 	
@@ -81,14 +82,16 @@ public class FileInfoDatabase {
 
 	private static final String fileGroupTableName = "filegroup";
 	private static final String fileGroupTableFieldNameDescription = "description";
+	private static final String fileGroupTableFieldNameAuto = "auto";
 	private static final String fileGroupTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileGroupTableName + " " +
 			"(" + fieldNameId + "					INTEGER	PRIMARY KEY, " +
 			fileGroupTableFieldNameDescription + "	TEXT	NOT NULL, " +
+			fileGroupTableFieldNameAuto + 		"	TEXT	DEFAULT 'y' NOT NULL, " +
 			"recordLastModificationTime				INTEGER	NOT NULL, " +
 			"deleted								INTEGER	DEFAULT 0)";
 	private static final String fileGroupInsertCommandSql = "INSERT INTO " + fileGroupTableName + " " +
-			"(" + fileGroupTableFieldNameDescription + ", recordLastModificationTime) " +
-			"VALUES (?, ?)";
+			"(" + fileGroupTableFieldNameDescription + ", " + fileGroupTableFieldNameAuto + ", recordLastModificationTime) " +
+			"VALUES (?, ?, ?)";
 	private static final String selectFileGroupCommandSql = "SELECT " +
 			fieldNameId + ", " + fileGroupTableFieldNameDescription + ", recordLastModificationTime, deleted " +
 			"FROM " + fileGroupTableName + " WHERE " + fileGroupTableFieldNameDescription + "=?";
@@ -169,11 +172,16 @@ public class FileInfoDatabase {
 						upgradeFrom231to232(connection);
 						upgradeFrom232to233(connection);
 						upgradeFrom233to234(connection);
+						upgradeFrom234to235(connection);
 					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld232)) {
 						upgradeFrom232to233(connection);
 						upgradeFrom233to234(connection);
+						upgradeFrom234to235(connection);
 					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld233)) {
 						upgradeFrom233to234(connection);
+						upgradeFrom234to235(connection);
+					} else if (databaseVersion.equals(FileInfoDatabase.versionStringOld234)) {
+						upgradeFrom234to235(connection);
 					} else {
 						MyLogger.displayAndLogErrorMessage(String.format("Unsupported database version: [databaseVersion=%s] at [databaseFolder=%s].", databaseVersion, this.databaseFolder));
 						System.exit(Photons.errorCodeUnsupportedDatabaseVersion);
@@ -258,6 +266,21 @@ public class FileInfoDatabase {
 		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld233=%s] to [versionStringOld234=%s]", FileInfoDatabase.versionStringOld233, FileInfoDatabase.versionStringOld234);
 	}
 	
+	private void upgradeFrom234to235(Connection connection) throws SQLException {
+		// Upgrading from 2.3.4 to 2.3.5
+		MyLogger.displayAndLogDebugMessage("Database already exists with version: [versionStringOld234=%s] at [databaseFolder=%s]. Upgrading to [versionStringOld235=%s]", FileInfoDatabase.versionStringOld234, this.databaseFolder, FileInfoDatabase.versionStringOld235);
+
+		// Adding column 'auto' to table 'filegroup' with default value 'y'
+		Statement sqlStatement = connection.createStatement();
+		sqlStatement.executeUpdate("alter table '" + fileGroupTableName + "' add column '" + fileGroupTableFieldNameAuto + "' text default 'y' not null;");
+	      
+		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld232, DatabaseUtil.getLongTimeStampCurrent()));
+
+		sqlStatement.close();
+
+		MyLogger.displayAndLogInformationMessage("Updated database from [versionStringOld234=%s] to [versionStringOld235=%s]", FileInfoDatabase.versionStringOld234, FileInfoDatabase.versionStringOld235);
+	}
+	
 	/**
 	 * Inserts a new file record into the database
 	 * @param importTargetPath The target folder where the file was copied 
@@ -316,7 +339,8 @@ public class FileInfoDatabase {
 			// File group does not exist - inserting new
 			PreparedStatement preparedInsertFileGroupStatement = connection.prepareStatement(fileGroupInsertCommandSql);
 			preparedInsertFileGroupStatement.setString(1, groupName);
-			preparedInsertFileGroupStatement.setLong(2, new Date().getTime());
+			preparedInsertFileGroupStatement.setString(2, "y");
+			preparedInsertFileGroupStatement.setLong(3, new Date().getTime());
 			if (preparedInsertFileGroupStatement.executeUpdate() != 1) {
 				MyLogger.displayAndLogErrorMessage("Failed to insert filegroup information [description=%s]", groupName);
 				System.exit(Photons.errorCodeFailedToInsertFileGroupInformationIntoDatabase);
