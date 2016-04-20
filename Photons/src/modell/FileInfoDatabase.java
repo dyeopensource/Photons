@@ -27,49 +27,53 @@ public class FileInfoDatabase {
 
 	private static final String versionStringCurrent = "2.3.5";
 	
-	private static final String versionStringOld231 = "2.3.1";
-	private static final String versionStringOld232 = "2.3.2";
-	private static final String versionStringOld233 = "2.3.3";
-	private static final String versionStringOld234 = "2.3.4";
 	private static final String versionStringOld235 = "2.3.5";
+	private static final String versionStringOld234 = "2.3.4";
+	private static final String versionStringOld233 = "2.3.3";
+	private static final String versionStringOld232 = "2.3.2";
+	private static final String versionStringOld231 = "2.3.1";
 	
 	private static final String fieldNameId = "id";
+	private static final String fieldDefinitionId = fieldNameId + " INTEGER PRIMARY KEY";
+	private static final String fieldNameRecordLastModificationTime = "recordLastModificationTime";
+	private static final String fieldDefinitionRecordLastModificationTime = fieldNameRecordLastModificationTime + " INTEGER	NOT NULL";
+	private static final String fieldNameDeleted = "deleted";
+	private static final String fieldDefinitionDeleted = fieldNameDeleted + " INTEGER DEFAULT 0";
 	
 	private static final String configTableName = "config";
 	private static final String configTableFieldNameValue = "value";
-	private static final String configTableFieldNameRecordLastModificationTime = "recordLastModificationTime";
 	private static final String configCreateCommandSql = "CREATE TABLE IF NOT EXISTS " + configTableName + " " +
-			"(" + fieldNameId + "								INTEGER		PRIMARY KEY, " +
+			"(" + fieldDefinitionId + ", " +
 			"key												TEXT		NOT NULL, " +
 			configTableFieldNameValue + "						TEXT		NOT NULL, " +
-			configTableFieldNameRecordLastModificationTime + "	INTEGER		NOT NULL, " +
-			"deleted											INTEGER		DEFAULT 0)";
-	private static final String configVersionInsertCommandSql = "INSERT INTO " + configTableName + " (key, " + configTableFieldNameValue + ", recordLastModificationTime) " +
+			fieldDefinitionRecordLastModificationTime + ", " +
+			fieldDefinitionDeleted + ")";
+	private static final String configVersionInsertCommandSql = "INSERT INTO " + configTableName + " (key, " + configTableFieldNameValue + ", " + fieldNameRecordLastModificationTime + ") " +
 			"VALUES ('version', '" + versionStringCurrent + "', %d)";
 	//private static final String configVersionUpdateToCurrentCommandSql = "UPDATE " + configTableName + " SET " + configTableFieldNameValue + "='" + versionStringCurrent + "' WHERE key='version';"
 	//		+ "UPDATE " + configTableName + " SET " + configTableFieldNameRecordLastModificationTime + "=%d;";
 	private static final String configVersionUpdateToOldCommandSql = "UPDATE " + configTableName + " SET " + configTableFieldNameValue + "='%s' WHERE key='version';"
-			+ "UPDATE " + configTableName + " SET " + configTableFieldNameRecordLastModificationTime + "=%d;";
-	private static final String configVersionSelectCommandSql = "SELECT " + configTableFieldNameValue + ", recordLastModificationTime " +
+			+ "UPDATE " + configTableName + " SET " + fieldNameRecordLastModificationTime + "=%d;";
+	private static final String configVersionSelectCommandSql = "SELECT " + configTableFieldNameValue + ", " + fieldNameRecordLastModificationTime + " " +
 			"FROM " + configTableName + " WHERE key = 'version' ORDER BY value ASC";
 
 	private static final String fileInfoTableName = "fileinfo";
 	private static final String fileInfoTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileInfoTableName + " " +
-			"(" + fieldNameId + "			INTEGER	PRIMARY KEY, " +
-			"originalFileNameWithPath		TEXT	NOT NULL, " +
-			"originalLength					INTEGER	NOT NULL, " +
-			"originalHash					TEXT	NOT NULL, " +
-			"originalLastModificationTime	INTEGER	NOT NULL, " +
-			"subFolder						TEXT	NOT NULL, " +
-			"fileName						TEXT	NOT NULL, " +
-			"importEnabled					INTEGER	NOT NULL, " +
-			"type							INTEGER	NOT NULL, " +
-			"description					TEXT	NOT NULL, " +
-			"recordLastModificationTime		INTEGER	NOT NULL, " +
-			"deleted						INTEGER	DEFAULT 0)";
+			"(" + fieldDefinitionId + ", " +
+			"originalFileNameWithPath				TEXT	NOT NULL, " +
+			"originalLength							INTEGER	NOT NULL, " +
+			"originalHash							TEXT	NOT NULL, " +
+			"originalLastModificationTime			INTEGER	NOT NULL, " +
+			"subFolder								TEXT	NOT NULL, " +
+			"fileName								TEXT	NOT NULL, " +
+			"importEnabled							INTEGER	NOT NULL, " +
+			"type									INTEGER	NOT NULL, " +
+			"description							TEXT	NOT NULL, " +
+			fieldDefinitionRecordLastModificationTime + ", " +
+			fieldDefinitionDeleted + ")";
 	private static final String fileInfoInsertCommandSql = "INSERT INTO " + fileInfoTableName + " " +
 			"(originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
-			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime) " +
+			"subFolder, fileName, importEnabled, type, description, " + fieldNameRecordLastModificationTime + ") " +
 			"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 	
 	/**
@@ -77,51 +81,51 @@ public class FileInfoDatabase {
 	 */
 	private static final String selectFileInfoCommandSql = "SELECT " +
 			fieldNameId + ", originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, " +
-			"subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted " +
+			"subFolder, fileName, importEnabled, type, description, " + fieldNameRecordLastModificationTime + ", " + fieldNameDeleted + " " +
 			"FROM " + fileInfoTableName + " WHERE originalHash=? AND originalLength=?";
 
 	private static final String fileGroupTableName = "filegroup";
 	private static final String fileGroupTableFieldNameDescription = "description";
 	private static final String fileGroupTableFieldNameAuto = "auto";
 	private static final String fileGroupTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileGroupTableName + " " +
-			"(" + fieldNameId + "					INTEGER	PRIMARY KEY, " +
+			"(" + fieldDefinitionId + ", " +
 			fileGroupTableFieldNameDescription + "	TEXT	NOT NULL, " +
 			fileGroupTableFieldNameAuto + 		"	TEXT	DEFAULT 'y' NOT NULL, " +
-			"recordLastModificationTime				INTEGER	NOT NULL, " +
-			"deleted								INTEGER	DEFAULT 0)";
+			fieldDefinitionRecordLastModificationTime + ", " +
+			fieldDefinitionDeleted + ")";
 	private static final String fileGroupInsertCommandSql = "INSERT INTO " + fileGroupTableName + " " +
-			"(" + fileGroupTableFieldNameDescription + ", " + fileGroupTableFieldNameAuto + ", recordLastModificationTime) " +
+			"(" + fileGroupTableFieldNameDescription + ", " + fileGroupTableFieldNameAuto + ", " + fieldNameRecordLastModificationTime + ") " +
 			"VALUES (?, ?, ?)";
 	private static final String selectFileGroupCommandSql = "SELECT " +
-			fieldNameId + ", " + fileGroupTableFieldNameDescription + ", recordLastModificationTime, deleted " +
+			fieldNameId + ", " + fileGroupTableFieldNameDescription + ", " + fieldNameRecordLastModificationTime + ", " + fieldNameDeleted + " " +
 			"FROM " + fileGroupTableName + " WHERE " + fileGroupTableFieldNameDescription + "=?";
 
 	private static final String fileGroupAssignmentTableName = "filegroupassignment";
 	private static final String fileGroupAssignmentTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileGroupAssignmentTableName + " " +
-			"(" + fieldNameId + "			INTEGER	PRIMARY KEY, " +
-			"groupid						INTEGER	NOT NULL, " +
-			"fileid							INTEGER	NOT NULL, " +
-			"recordLastModificationTime		INTEGER	NOT NULL, " +
-			"deleted						INTEGER	DEFAULT 0)";
+			"(" + fieldDefinitionId + ", " +
+			"groupid								INTEGER	NOT NULL, " +
+			"fileid									INTEGER	NOT NULL, " +
+			fieldDefinitionRecordLastModificationTime + ", " +
+			fieldDefinitionDeleted + ")";
 	private static final String fileGroupAssignmentInsertCommandSql = "INSERT INTO " + fileGroupAssignmentTableName + " " +
-			"(groupid, fileid, recordLastModificationTime) " +
+			"(groupid, fileid, " + fieldNameRecordLastModificationTime + ") " +
 			"VALUES (?, ?, ?)";
 	private static final String selectFileGroupAssignmentCommandSql = "SELECT " +
-			fieldNameId + ", groupid, fileid, recordLastModificationTime, deleted " +
+			fieldNameId + ", groupid, fileid, " + fieldNameRecordLastModificationTime + ", " + fieldNameDeleted + " " +
 			"FROM " + fileGroupAssignmentTableName + " WHERE groupid=? AND fileid=?";
 
 	private static final String fileTypeTableName = "filetype";
 	private static final String fileTypeTableFieldNameExtension = "extension";
 	private static final String fileTypeTableCreationCommandSql = "CREATE TABLE IF NOT EXISTS " + fileTypeTableName + " " +
-			"(" + fieldNameId + "					INTEGER	PRIMARY KEY, " +
+			"(" + fieldDefinitionId + ", " +
 			fileTypeTableFieldNameExtension + 	"	TEXT	NOT NULL, " +
-			"recordLastModificationTime				INTEGER	NOT NULL, " +
-			"deleted								INTEGER	DEFAULT 0)";
+			fieldDefinitionRecordLastModificationTime + ", " +
+			fieldDefinitionDeleted + ")";
 	private static final String fileTypeInsertCommandSql = "INSERT INTO " + fileTypeTableName + " " +
-			"(" + fileTypeTableFieldNameExtension + ", recordLastModificationTime) " +
+			"(" + fileTypeTableFieldNameExtension + ", " + fieldNameRecordLastModificationTime + ") " +
 			"VALUES (?, ?)";
 	private static final String selectFileTypeCommandSql = "SELECT " +
-			fieldNameId + ", " + fileTypeTableFieldNameExtension + ", recordLastModificationTime, deleted " +
+			fieldNameId + ", " + fileTypeTableFieldNameExtension + ", " + fieldNameRecordLastModificationTime + ", " + fieldNameDeleted + " " +
 			"FROM " + fileTypeTableName + " WHERE " + fileTypeTableFieldNameExtension + "=?";
 	
 	private Path databaseFolder;
@@ -217,9 +221,9 @@ public class FileInfoDatabase {
 
 		// Removing mediaContentTimeStamp field from fileinfo table:
 		Statement sqlStatement = connection.createStatement();
-		sqlStatement.executeUpdate("create table fileinfo1 as select id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, userTimeStamp, subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted from fileinfo;"
-		+ " drop table fileinfo;"
-		+ " alter table fileinfo1 rename to fileinfo;");
+		sqlStatement.executeUpdate("CREATE TABLE fileinfo1 AS SELECT id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, userTimeStamp, subFolder, fileName, importEnabled, type, description, " + fieldNameRecordLastModificationTime + ", " + fieldNameDeleted + " FROM fileinfo;"
+		+ " DROP TABLE fileinfo;"
+		+ " ALTER TABLE fileinfo1 RENAME TO fileinfo;");
 	      
 		sqlStatement.executeUpdate(String.format(configVersionUpdateToOldCommandSql, FileInfoDatabase.versionStringOld232, DatabaseUtil.getLongTimeStampCurrent()));
 
@@ -234,7 +238,7 @@ public class FileInfoDatabase {
 
 		// Removing userTimeStamp field from fileinfo table:
 		Statement sqlStatement = connection.createStatement();
-		sqlStatement.executeUpdate("create table fileinfo1 as select id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, subFolder, fileName, importEnabled, type, description, recordLastModificationTime, deleted from fileinfo;"
+		sqlStatement.executeUpdate("create table fileinfo1 as select id, originalFileNameWithPath, originalLength, originalHash, originalLastModificationTime, subFolder, fileName, importEnabled, type, description, " + fieldNameRecordLastModificationTime + ", " + fieldNameDeleted + " FROM fileinfo;"
 		+ " drop table fileinfo;"
 		+ " alter table fileinfo1 rename to fileinfo;");
 	      
@@ -289,7 +293,7 @@ public class FileInfoDatabase {
 	 * @param fileInfo The object containing data to be inserted into the database
 	 * @throws FileNotFoundException 
 	 */
-	public void addFileImportedInfo(String importTargetPath, FileImportedInfo fileInfo) {
+	public void addFileImportedInfo(String importTargetPath, FileImportedInfo fileInfo, String groupName) {
 		DatabaseUtil.CheckSQLite();
 		Connection connection;
 		try {
@@ -318,7 +322,7 @@ public class FileInfoDatabase {
 			preparedInsertFileInfoStatement.close();
 
 			// Note: return value is not checked for storeFileGroupInformation 
-			storeFileGroupInformation(connection, fileInfo, null);
+			storeFileGroupInformation(connection, groupName, fileInfo, null);
 			
 			//connection.commit(); // If a transaction is necessary
 			
@@ -329,11 +333,11 @@ public class FileInfoDatabase {
 		}
 	}
 	
-	private Boolean storeFileGroupInformation(Connection connection, FileImportedInfo fileInfo, FileImportedInfo existingFileImportedInfo) throws SQLException {
+	private Boolean storeFileGroupInformation(Connection connection, String groupName, FileImportedInfo fileInfo, FileImportedInfo existingFileImportedInfo) throws SQLException {
 		
 		Boolean databaseWasChanged = false;
 		
-		String groupName = fileInfo.getOriginalFilePath();
+		//String groupName = fileInfo.getOriginalFilePath();
 		
 		long groupId = getFileGroupId(connection, groupName);
 
@@ -479,7 +483,7 @@ public class FileInfoDatabase {
 		return assignmentId;
 	}
 	
-	public Boolean addSourcePathInfo(FileImportedInfo fileImportedInfo, FileImportedInfo existingFileImportedInfo) {
+	public Boolean addSourcePathInfo(FileImportedInfo fileImportedInfo, FileImportedInfo existingFileImportedInfo, String groupName) {
 		Boolean databaseWasChanged = false;
 		Connection connection;
 		try {
@@ -487,7 +491,7 @@ public class FileInfoDatabase {
 			
 			//connection.setAutoCommit(false); // If running multiple actions in a transaction
 			
-			databaseWasChanged = storeFileGroupInformation(connection, fileImportedInfo, existingFileImportedInfo);
+			databaseWasChanged = storeFileGroupInformation(connection, groupName, fileImportedInfo, existingFileImportedInfo);
 			
 			//connection.commit(); // If a transaction is necessary
 			
