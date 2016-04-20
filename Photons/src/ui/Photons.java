@@ -32,6 +32,8 @@ public class Photons {
 	public static final int errorCodeDatabaseVersionCheckFailure = 18;
 	public static final int errorCodeFailedToInsertFileTypeInformationIntoDatabase = 19;
 	public static final int errorCodeFailedToGetFileTypeInformation = 20;
+	public static final int errorCodeJDBCNotFound = 21;
+	public static final int errorCodeSourceFolderUUIDReadingError = 22;
 	
 	private static final int actionShowUsage = 0;
 	private static final int actionShowUI = 1;
@@ -106,6 +108,8 @@ public class Photons {
 		if (Photons.action == Photons.actionImport) {
 			FileImporter fileImporter = new FileImporter(Photons.sourcePath, Photons.destinationPath, Photons.types);
 			try {
+				//String uuidPath = FileUtil.getDeviceBasedUniformPath(Photons.sourcePath, Photons.sourcePath);
+				//String u2 = uuidPath;
 				fileImporter.Import();
 			} catch (IOException e) {
 				MyLogger.displayAndLogExceptionMessage(e, "Import failed");

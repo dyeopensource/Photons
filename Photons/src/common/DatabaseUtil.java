@@ -2,6 +2,8 @@ package common;
 
 import java.util.Date;
 
+import ui.Photons;
+
 /**
  * Class for general database methods
  * @author emil
@@ -49,7 +51,7 @@ public class DatabaseUtil {
 			Class.forName("org.sqlite.JDBC");
 		} catch (ClassNotFoundException e) {
 			MyLogger.displayAndLogExceptionMessage(e, "JDBC not found.");
-			System.exit(1);
+			System.exit(Photons.errorCodeJDBCNotFound);
 		}
 	}
 }

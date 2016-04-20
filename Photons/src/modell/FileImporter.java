@@ -23,9 +23,18 @@ import ui.Photons;
 public class FileImporter {
 
 	/**
-	 * This is the source folder of the images to be imported. All subdirectories will be scanned.
+	 * This is the source folder of the images to be imported. All subfolders will be scanned.
 	 */
 	private Path importSourcePath;
+	
+	private String importSourcePathString;
+	private int importSourcePathStringLength;
+	
+	/**
+	 * The source folder path with an UUID, to be used as a group information
+	 * to avoid duplicate entries in the group table caused by different mount points or drive letters
+	 */
+	private String importSourcePathWithUUID;
 	
 	/**
 	 * The target folder of the import action. Imported files will be stored in the subfolders of this folder.
@@ -42,12 +51,32 @@ public class FileImporter {
 	private FileInfoDatabase fileInfoDatabase;
 	
 	private Path lastFilePath = null;
+	private String lastUUIDFilePath;
 	
 	private Boolean verificationSucceeded;
 	
 	public FileImporter(String pathToImportFrom, String pathToImportTo, String[] fileExtensionsToImport) {
-		this.importSourcePath = Paths.get(pathToImportFrom);
+		
+		this.importSourcePath = FileUtil.getResolvedPath(pathToImportFrom);
+		this.importSourcePathString = this.importSourcePath.toString();
+		this.importSourcePathStringLength = this.importSourcePathString.length();
+		
 		this.importTargetPath = Paths.get(pathToImportTo);
+		
+		// TODO: maybe keeping this long path in the group table is wasting storage place. An idea to keep it shorter:
+		// Devices table could be introduced (instead of a uuid://... prefix). Groups could store only the device root
+		// relative path, they can be associated with devices. A device can have also a description (e.g. "desktop hard drive").
+		// Maybe the current group table could be renamed to 'source', the association of a group with a device could be done
+		// by introducing a devideId field in the group->source table. Later we could introduce a real group table, where the user
+		// will create or import groups. The device table should store the UUID. Maybe it should have some default values, like:
+		// unknown or read only device (maybe we can identify devices also differently - linux file system UUID, partition label etc.)
+		this.importSourcePathWithUUID = FileUtil.getPathWithUUID(this.importSourcePath);
+		
+		try {
+			this.importTargetPath = this.importTargetPath.toRealPath(LinkOption.NOFOLLOW_LINKS);
+		} catch (IOException e) {
+			MyLogger.displayAndLogExceptionMessage(e, "Failed to get real path from [importTargetPath=%s]", this.importTargetPath);
+		}
 		
 		this.fileInfoDatabase = new FileInfoDatabase(this.importTargetPath);
 		this.fileInfoDatabase.openOrCreateDatabase();
@@ -64,7 +93,7 @@ public class FileImporter {
 	}
 	
 	public void Import() throws IOException {
-		MyLogger.displayAndLogInformationMessage("Importing files from [%s] to [%s]", this.importSourcePath, this.importTargetPath);
+		MyLogger.displayAndLogInformationMessage("Importing files from [%s] (%s) to [%s]", this.importSourcePath, this.importSourcePathWithUUID, this.importTargetPath);
 		
 		Files.walkFileTree(this.importSourcePath,
 			new SimpleFileVisitor<Path>() {
@@ -128,8 +157,13 @@ public class FileImporter {
 		try {
 			Path filePath = file.toRealPath(LinkOption.NOFOLLOW_LINKS).getParent();
 			if (!filePath.equals(lastFilePath)) {
-				lastFilePath = filePath;
-				MyLogger.displayInformationMessage("Importing from [%s]...", lastFilePath);
+				this.lastFilePath = filePath;
+				MyLogger.displayInformationMessage("Importing from [%s]...", this.lastFilePath);
+				
+				String lastFilePathString = this.lastFilePath.toString();
+				
+				// TODO: maybe a helper method should be created to get unix-like paths (not simply using replace everywhere)
+				this.lastUUIDFilePath = this.importSourcePathWithUUID + "/" + lastFilePathString.substring(this.importSourcePathStringLength, lastFilePathString.length()).replace("\\", "/");
 			}
 		} catch (Exception e) {
 			MyLogger.displayAndLogExceptionMessage(e, "Failed to import files in [%s].", file);
@@ -201,7 +235,7 @@ public class FileImporter {
 			// Saving file information into database
 			Boolean groupInfoWasAdded = false;
 			if (addNewFileInfo) {
-				fileInfoDatabase.addFileImportedInfo(importTargetPath.toString(), fileImportedInfo);
+				fileInfoDatabase.addFileImportedInfo(importTargetPath.toString(), fileImportedInfo, this.lastUUIDFilePath);
 				
 				// Verifying database insertion
 				FileImportedInfo createdFileImportedInfo = fileInfoDatabase.getFileImportedInfo(
@@ -212,7 +246,7 @@ public class FileImporter {
 					System.exit(Photons.errorCodeFileInsertionVerificationFailed);
 				}
 			} else {
-				groupInfoWasAdded = fileInfoDatabase.addSourcePathInfo(fileImportedInfo, existingFileImportedInfo);
+				groupInfoWasAdded = fileInfoDatabase.addSourcePathInfo(fileImportedInfo, existingFileImportedInfo, this.lastUUIDFilePath);
 			}
 			
 			// Success
