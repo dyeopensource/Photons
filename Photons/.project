@@ -18,7 +18,7 @@
 		<link>
 			<name>lib/sqlite-jdbc-3.8.11.2.jar</name>
 			<type>1</type>
-			<location>D:/private/prog/Photons/Photons/Photons/lib/sqlite-jdbc-3.8.11.2.jar</location>
+			<locationURI>PROJECT_LOC/lib/sqlite-jdbc-3.8.11.2.jar</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
